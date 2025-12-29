@@ -1,9 +1,10 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Globe, FileText, Database, RefreshCw, Plus, Check, AlertCircle, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { firecrawlApi } from '@/lib/api/firecrawl';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
+import { CrawlScheduler } from './CrawlScheduler';
 
 interface DataSource {
   id: string;
@@ -154,9 +155,13 @@ export const DataSourcePanel = () => {
           </p>
         </div>
 
-        <div className="max-w-4xl mx-auto">
+        <div className="max-w-4xl mx-auto space-y-8">
+          {/* Scheduled Crawler */}
+          <CrawlScheduler />
+
           {/* Add URL Form */}
-          <div className="glass rounded-2xl p-6 mb-8">
+          <div className="glass rounded-2xl p-6">
+            <h3 className="font-display font-semibold text-foreground mb-4">Add Custom Source</h3>
             <div className="flex flex-col sm:flex-row gap-4">
               <input
                 type="url"
