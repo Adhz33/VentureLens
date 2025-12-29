@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { TrendingUp, Users, FileText, Database, DollarSign, Building2 } from 'lucide-react';
+import { subMonths } from 'date-fns';
 import { Header } from '@/components/layout/Header';
 import { HeroSection } from '@/components/hero/HeroSection';
 import { StatCard } from '@/components/dashboard/StatCard';
@@ -8,11 +9,13 @@ import { SectorBreakdown } from '@/components/dashboard/SectorBreakdown';
 import { FundingComparison } from '@/components/dashboard/FundingComparison';
 import { SectorAnalysis } from '@/components/dashboard/SectorAnalysis';
 import { ExportPanel } from '@/components/dashboard/ExportPanel';
+import { DateRangeFilter } from '@/components/dashboard/DateRangeFilter';
 import { QueryInterface } from '@/components/query/QueryInterface';
 import { InvestorCard } from '@/components/investors/InvestorCard';
 import { PolicyCard } from '@/components/policies/PolicyCard';
 import { DataSourcePanel } from '@/components/data/DataSourcePanel';
 import { LanguageCode } from '@/lib/constants';
+import { useFundingData, DateRange } from '@/hooks/useFundingData';
 
 const SAMPLE_INVESTORS = [
   {
@@ -69,8 +72,21 @@ const SAMPLE_POLICIES = [
   },
 ];
 
+const formatCurrency = (amount: number): string => {
+  if (amount >= 1000000000) return `$${(amount / 1000000000).toFixed(1)}B`;
+  if (amount >= 1000000) return `$${(amount / 1000000).toFixed(1)}M`;
+  if (amount >= 1000) return `$${(amount / 1000).toFixed(0)}K`;
+  return `$${amount}`;
+};
+
 const Index = () => {
   const [selectedLanguage, setSelectedLanguage] = useState<LanguageCode>('en');
+  const [dateRange, setDateRange] = useState<DateRange>({
+    from: subMonths(new Date(), 12),
+    to: new Date(),
+  });
+
+  const { data, isLoading, stats, monthlyTrends, sectorBreakdown } = useFundingData(dateRange);
 
   return (
     <div className="min-h-screen bg-background">
@@ -87,40 +103,43 @@ const Index = () => {
           <div className="absolute inset-0 bg-grid-pattern bg-grid opacity-20" />
           
           <div className="container mx-auto px-4 relative z-10">
-            <div className="flex items-center justify-between mb-12">
-              <div className="text-center flex-1">
-                <h2 className="font-display font-bold text-3xl md:text-4xl text-foreground mb-4">
+            <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4 mb-12">
+              <div>
+                <h2 className="font-display font-bold text-3xl md:text-4xl text-foreground mb-2">
                   Funding <span className="text-gradient">Dashboard</span>
                 </h2>
-                <p className="text-muted-foreground max-w-2xl mx-auto">
+                <p className="text-muted-foreground">
                   Real-time insights into startup ecosystem funding activity
                 </p>
               </div>
-              <ExportPanel />
+              <div className="flex flex-wrap items-center gap-3">
+                <DateRangeFilter dateRange={dateRange} onDateRangeChange={setDateRange} />
+                <ExportPanel />
+              </div>
             </div>
 
             {/* Stats Grid */}
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
               <StatCard
-                title="Total Funding (2024)"
-                value="$12.4B"
-                change="+23% from 2023"
+                title="Total Funding"
+                value={stats.totalFunding > 0 ? formatCurrency(stats.totalFunding) : "$12.4B"}
+                change={stats.totalDeals > 0 ? `${stats.totalDeals} deals in period` : "+23% from 2023"}
                 changeType="positive"
                 icon={DollarSign}
                 delay={100}
               />
               <StatCard
-                title="Active Investors"
-                value="847"
-                change="+12% this quarter"
+                title="Unique Investors"
+                value={stats.uniqueInvestors > 0 ? stats.uniqueInvestors.toString() : "847"}
+                change={stats.uniqueInvestors > 0 ? "Active in period" : "+12% this quarter"}
                 changeType="positive"
                 icon={Users}
                 delay={200}
               />
               <StatCard
                 title="Funded Startups"
-                value="1,234"
-                change="156 new this month"
+                value={stats.uniqueStartups > 0 ? stats.uniqueStartups.toString() : "1,234"}
+                change={stats.uniqueStartups > 0 ? "In selected range" : "156 new this month"}
                 changeType="neutral"
                 icon={Building2}
                 delay={300}
@@ -138,15 +157,15 @@ const Index = () => {
             {/* Charts Row */}
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
               <div className="lg:col-span-2">
-                <FundingChart />
+                <FundingChart data={monthlyTrends} isLoading={isLoading} />
               </div>
-              <SectorBreakdown />
+              <SectorBreakdown data={sectorBreakdown} isLoading={isLoading} />
             </div>
 
             {/* Comparison and Analysis Row */}
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
               <FundingComparison />
-              <SectorAnalysis />
+              <SectorAnalysis data={sectorBreakdown} isLoading={isLoading} />
             </div>
           </div>
         </section>
