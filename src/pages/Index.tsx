@@ -11,6 +11,7 @@ import { SectorAnalysis } from '@/components/dashboard/SectorAnalysis';
 import { SectorComparison } from '@/components/dashboard/SectorComparison';
 import { ExportPanel } from '@/components/dashboard/ExportPanel';
 import { DateRangeFilter } from '@/components/dashboard/DateRangeFilter';
+import { DataFreshnessIndicator } from '@/components/dashboard/DataFreshnessIndicator';
 import { QueryInterface } from '@/components/query/QueryInterface';
 import { InvestorCard } from '@/components/investors/InvestorCard';
 import { PolicyCard } from '@/components/policies/PolicyCard';
@@ -123,6 +124,7 @@ const Index = () => {
                 </p>
               </div>
               <div className="flex flex-wrap items-center gap-3">
+                <DataFreshnessIndicator />
                 <DateRangeFilter dateRange={dateRange} onDateRangeChange={setDateRange} />
                 <ExportPanel />
               </div>
