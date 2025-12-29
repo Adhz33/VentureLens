@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { TrendingUp, Users, Database, DollarSign, Building2 } from 'lucide-react';
 import { subMonths } from 'date-fns';
 import { AppSidebar } from '@/components/layout/AppSidebar';
+import { KnowledgeBasePanel } from '@/components/knowledge/KnowledgeBasePanel';
 import { StatCard } from '@/components/dashboard/StatCard';
 import { FundingChart } from '@/components/dashboard/FundingChart';
 import { SectorBreakdown } from '@/components/dashboard/SectorBreakdown';
@@ -16,6 +17,7 @@ import { PolicyCard } from '@/components/policies/PolicyCard';
 import { DataSourcePanel } from '@/components/data/DataSourcePanel';
 import { LanguageCode } from '@/lib/constants';
 import { useFundingData, DateRange } from '@/hooks/useFundingData';
+import { cn } from '@/lib/utils';
 
 const SAMPLE_INVESTORS = [
   {
@@ -85,6 +87,7 @@ const Index = () => {
     from: subMonths(new Date(), 12),
     to: new Date(),
   });
+  const [isKnowledgeBaseOpen, setIsKnowledgeBaseOpen] = useState(false);
 
   const { data, isLoading, stats, monthlyTrends, sectorBreakdown } = useFundingData(dateRange);
 
@@ -92,10 +95,19 @@ const Index = () => {
     <div className="min-h-screen bg-background flex">
       <AppSidebar 
         selectedLanguage={selectedLanguage} 
-        onLanguageChange={setSelectedLanguage} 
+        onLanguageChange={setSelectedLanguage}
+        onToggleKnowledgeBase={() => setIsKnowledgeBaseOpen(!isKnowledgeBaseOpen)}
+        isKnowledgeBaseOpen={isKnowledgeBaseOpen}
       />
       
-      <main className="flex-1 ml-64 lg:ml-64">
+      <main className={cn(
+        "flex-1 ml-64 transition-all duration-300",
+        isKnowledgeBaseOpen && "mr-80"
+      )}>
+        <KnowledgeBasePanel 
+          isOpen={isKnowledgeBaseOpen} 
+          onClose={() => setIsKnowledgeBaseOpen(false)} 
+        />
         {/* Dashboard Section */}
         <section id="dashboard" className="py-12 bg-background relative">
           <div className="absolute inset-0 bg-grid-pattern bg-grid opacity-20" />
