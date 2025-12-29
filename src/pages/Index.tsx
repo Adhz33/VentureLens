@@ -8,6 +8,7 @@ import { FundingChart } from '@/components/dashboard/FundingChart';
 import { SectorBreakdown } from '@/components/dashboard/SectorBreakdown';
 import { FundingComparison } from '@/components/dashboard/FundingComparison';
 import { SectorAnalysis } from '@/components/dashboard/SectorAnalysis';
+import { SectorComparison } from '@/components/dashboard/SectorComparison';
 import { ExportPanel } from '@/components/dashboard/ExportPanel';
 import { DateRangeFilter } from '@/components/dashboard/DateRangeFilter';
 import { QueryInterface } from '@/components/query/QueryInterface';
@@ -163,10 +164,13 @@ const Index = () => {
             </div>
 
             {/* Comparison and Analysis Row */}
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
               <FundingComparison />
               <SectorAnalysis data={sectorBreakdown} isLoading={isLoading} />
             </div>
+
+            {/* Sector Comparison Tool */}
+            <SectorComparison data={data} isLoading={isLoading} />
           </div>
         </section>
 
