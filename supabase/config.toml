@@ -8,3 +8,6 @@ verify_jwt = false
 
 [functions.firecrawl-scrape]
 verify_jwt = false
+
+[functions.scheduled-crawl]
+verify_jwt = false
