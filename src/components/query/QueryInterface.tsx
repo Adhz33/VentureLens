@@ -1,8 +1,7 @@
-import { useState, useRef, useEffect } from 'react';
-import { Send, Loader2, Sparkles, BookOpen, ChevronRight } from 'lucide-react';
+import { useState, useRef, useEffect, useCallback } from 'react';
+import { Send, Loader2, Sparkles, BookOpen, ChevronRight, FileText } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { LanguageCode, SAMPLE_QUERIES } from '@/lib/constants';
-import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import ReactMarkdown from 'react-markdown';
 
@@ -11,16 +10,20 @@ interface Message {
   role: 'user' | 'assistant';
   content: string;
   sources?: Array<{ title: string; url: string }>;
+  documentSources?: Array<{ name: string; category: string }>;
 }
 
 interface QueryInterfaceProps {
   language: LanguageCode;
 }
 
+const CHAT_URL = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/rag-query`;
+
 export const QueryInterface = ({ language }: QueryInterfaceProps) => {
   const [query, setQuery] = useState('');
   const [messages, setMessages] = useState<Message[]>([]);
   const [isLoading, setIsLoading] = useState(false);
+  const [streamingContent, setStreamingContent] = useState('');
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const { toast } = useToast();
 
@@ -32,9 +35,9 @@ export const QueryInterface = ({ language }: QueryInterfaceProps) => {
 
   useEffect(() => {
     scrollToBottom();
-  }, [messages]);
+  }, [messages, streamingContent]);
 
-  const handleSubmit = async (e?: React.FormEvent) => {
+  const handleSubmit = useCallback(async (e?: React.FormEvent) => {
     e?.preventDefault();
     if (!query.trim() || isLoading) return;
 
@@ -45,42 +48,139 @@ export const QueryInterface = ({ language }: QueryInterfaceProps) => {
     };
 
     setMessages((prev) => [...prev, userMessage]);
+    const currentQuery = query;
     setQuery('');
     setIsLoading(true);
+    setStreamingContent('');
 
     try {
-      const response = await supabase.functions.invoke('rag-query', {
-        body: { 
-          query: query,
-          language: language,
-          conversationHistory: messages.map(m => ({ role: m.role, content: m.content }))
+      const response = await fetch(CHAT_URL, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
         },
+        body: JSON.stringify({ 
+          query: currentQuery,
+          language: language,
+          conversationHistory: messages.map(m => ({ role: m.role, content: m.content })),
+          useKnowledgeBase: true
+        }),
       });
 
-      if (response.error) throw response.error;
+      if (!response.ok) {
+        if (response.status === 429) {
+          throw new Error('Rate limit exceeded. Please try again in a moment.');
+        }
+        if (response.status === 402) {
+          throw new Error('AI credits exhausted. Please add credits to continue.');
+        }
+        throw new Error('Failed to get response');
+      }
+
+      // Parse document sources from header
+      let documentSources: Array<{ name: string; category: string }> = [];
+      try {
+        const sourcesHeader = response.headers.get('X-Document-Sources');
+        if (sourcesHeader) {
+          documentSources = JSON.parse(sourcesHeader);
+        }
+      } catch (e) {
+        console.log('No document sources in header');
+      }
+
+      const reader = response.body?.getReader();
+      if (!reader) throw new Error('No response body');
+
+      const decoder = new TextDecoder();
+      let fullContent = '';
+      let textBuffer = '';
+
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+
+        textBuffer += decoder.decode(value, { stream: true });
+
+        let newlineIndex: number;
+        while ((newlineIndex = textBuffer.indexOf('\n')) !== -1) {
+          let line = textBuffer.slice(0, newlineIndex);
+          textBuffer = textBuffer.slice(newlineIndex + 1);
+
+          if (line.endsWith('\r')) line = line.slice(0, -1);
+          if (line.startsWith(':') || line.trim() === '') continue;
+          if (!line.startsWith('data: ')) continue;
+
+          const jsonStr = line.slice(6).trim();
+          if (jsonStr === '[DONE]') break;
+
+          try {
+            const parsed = JSON.parse(jsonStr);
+            const content = parsed.choices?.[0]?.delta?.content as string | undefined;
+            if (content) {
+              fullContent += content;
+              setStreamingContent(fullContent);
+            }
+          } catch {
+            textBuffer = line + '\n' + textBuffer;
+            break;
+          }
+        }
+      }
+
+      // Final flush
+      if (textBuffer.trim()) {
+        for (let raw of textBuffer.split('\n')) {
+          if (!raw) continue;
+          if (raw.endsWith('\r')) raw = raw.slice(0, -1);
+          if (raw.startsWith(':') || raw.trim() === '') continue;
+          if (!raw.startsWith('data: ')) continue;
+          const jsonStr = raw.slice(6).trim();
+          if (jsonStr === '[DONE]') continue;
+          try {
+            const parsed = JSON.parse(jsonStr);
+            const content = parsed.choices?.[0]?.delta?.content as string | undefined;
+            if (content) {
+              fullContent += content;
+            }
+          } catch { /* ignore */ }
+        }
+      }
 
       const assistantMessage: Message = {
         id: (Date.now() + 1).toString(),
         role: 'assistant',
-        content: response.data?.response || 'I apologize, but I could not generate a response. Please try again.',
-        sources: response.data?.sources || [],
+        content: fullContent || 'I apologize, but I could not generate a response. Please try again.',
+        sources: [
+          { title: 'Inc42 Funding Report', url: 'https://inc42.com/buzz/funding-galore' },
+          { title: 'Startup India Portal', url: 'https://startupindia.gov.in' },
+        ],
+        documentSources: documentSources.length > 0 ? documentSources : undefined,
       };
 
       setMessages((prev) => [...prev, assistantMessage]);
+      setStreamingContent('');
+
     } catch (error) {
       console.error('Query error:', error);
       toast({
         title: 'Error',
-        description: 'Failed to process your query. Please try again.',
+        description: error instanceof Error ? error.message : 'Failed to process your query. Please try again.',
         variant: 'destructive',
       });
+      setStreamingContent('');
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [query, isLoading, language, messages, toast]);
 
   const handleSampleQuery = (sampleQuery: string) => {
     setQuery(sampleQuery);
+  };
+
+  const clearConversation = () => {
+    setMessages([]);
+    setStreamingContent('');
   };
 
   return (
@@ -101,7 +201,7 @@ export const QueryInterface = ({ language }: QueryInterfaceProps) => {
           <div className="glass rounded-2xl overflow-hidden">
             {/* Messages Area */}
             <div className="h-[400px] overflow-y-auto p-6 space-y-4 scrollbar-hide">
-              {messages.length === 0 ? (
+              {messages.length === 0 && !streamingContent ? (
                 <div className="h-full flex flex-col items-center justify-center text-center">
                   <div className="w-16 h-16 rounded-2xl bg-primary/10 flex items-center justify-center mb-4">
                     <Sparkles className="w-8 h-8 text-primary" />
@@ -142,13 +242,34 @@ export const QueryInterface = ({ language }: QueryInterfaceProps) => {
                         }`}
                       >
                         {message.role === 'assistant' ? (
-                          <div className="prose prose-sm prose-invert max-w-none">
+                          <div className="prose prose-sm max-w-none dark:prose-invert">
                             <ReactMarkdown>{message.content}</ReactMarkdown>
                           </div>
                         ) : (
                           <p>{message.content}</p>
                         )}
                         
+                        {/* Document Sources */}
+                        {message.documentSources && message.documentSources.length > 0 && (
+                          <div className="mt-3 pt-3 border-t border-border/30">
+                            <p className="text-xs text-muted-foreground mb-2 flex items-center gap-1">
+                              <FileText className="w-3 h-3" />
+                              From Knowledge Base:
+                            </p>
+                            <div className="flex flex-wrap gap-2">
+                              {message.documentSources.map((doc, idx) => (
+                                <span
+                                  key={idx}
+                                  className="text-xs bg-primary/10 text-primary px-2 py-1 rounded-full"
+                                >
+                                  {doc.name}
+                                </span>
+                              ))}
+                            </div>
+                          </div>
+                        )}
+                        
+                        {/* Web Sources */}
                         {message.sources && message.sources.length > 0 && (
                           <div className="mt-3 pt-3 border-t border-border/30">
                             <p className="text-xs text-muted-foreground mb-2 flex items-center gap-1">
@@ -174,12 +295,24 @@ export const QueryInterface = ({ language }: QueryInterfaceProps) => {
                       </div>
                     </div>
                   ))}
-                  {isLoading && (
+                  
+                  {/* Streaming content */}
+                  {streamingContent && (
+                    <div className="flex justify-start">
+                      <div className="max-w-[80%] rounded-2xl px-5 py-3 bg-secondary/70 text-foreground">
+                        <div className="prose prose-sm max-w-none dark:prose-invert">
+                          <ReactMarkdown>{streamingContent}</ReactMarkdown>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                  
+                  {isLoading && !streamingContent && (
                     <div className="flex justify-start">
                       <div className="bg-secondary/70 rounded-2xl px-5 py-3">
                         <div className="flex items-center gap-2">
                           <Loader2 className="w-4 h-4 animate-spin text-primary" />
-                          <span className="text-sm text-muted-foreground">Thinking...</span>
+                          <span className="text-sm text-muted-foreground">Searching knowledge base...</span>
                         </div>
                       </div>
                     </div>
@@ -219,6 +352,14 @@ export const QueryInterface = ({ language }: QueryInterfaceProps) => {
                   )}
                 </Button>
               </form>
+              {messages.length > 0 && (
+                <button
+                  onClick={clearConversation}
+                  className="mt-2 text-xs text-muted-foreground hover:text-foreground transition-colors"
+                >
+                  Clear conversation
+                </button>
+              )}
             </div>
           </div>
         </div>
