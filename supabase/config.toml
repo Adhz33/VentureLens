@@ -1,1 +1,10 @@
 project_id = "zrrpmtrqxhoaqxzmgmhj"
+
+[functions.rag-query]
+verify_jwt = false
+
+[functions.ingest-data]
+verify_jwt = false
+
+[functions.firecrawl-scrape]
+verify_jwt = false
