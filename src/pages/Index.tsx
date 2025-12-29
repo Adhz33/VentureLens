@@ -1,8 +1,7 @@
 import { useState } from 'react';
-import { TrendingUp, Users, FileText, Database, DollarSign, Building2 } from 'lucide-react';
+import { TrendingUp, Users, Database, DollarSign, Building2 } from 'lucide-react';
 import { subMonths } from 'date-fns';
-import { Header } from '@/components/layout/Header';
-import { HeroSection } from '@/components/hero/HeroSection';
+import { AppSidebar } from '@/components/layout/AppSidebar';
 import { StatCard } from '@/components/dashboard/StatCard';
 import { FundingChart } from '@/components/dashboard/FundingChart';
 import { SectorBreakdown } from '@/components/dashboard/SectorBreakdown';
@@ -90,17 +89,15 @@ const Index = () => {
   const { data, isLoading, stats, monthlyTrends, sectorBreakdown } = useFundingData(dateRange);
 
   return (
-    <div className="min-h-screen bg-background">
-      <Header 
+    <div className="min-h-screen bg-background flex">
+      <AppSidebar 
         selectedLanguage={selectedLanguage} 
         onLanguageChange={setSelectedLanguage} 
       />
       
-      <main>
-        <HeroSection />
-
+      <main className="flex-1 ml-64 lg:ml-64">
         {/* Dashboard Section */}
-        <section id="dashboard" className="py-16 bg-background relative">
+        <section id="dashboard" className="py-12 bg-background relative">
           <div className="absolute inset-0 bg-grid-pattern bg-grid opacity-20" />
           
           <div className="container mx-auto px-4 relative z-10">
