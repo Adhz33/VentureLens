@@ -1,5 +1,6 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.49.1";
+import JSZip from "https://esm.sh/jszip@3.10.1";
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -11,13 +12,12 @@ function chunkText(text: string, chunkSize = 800, overlap = 150): string[] {
   const chunks: string[] = [];
   let start = 0;
   
-  // Clean the text
   const cleanedText = text.replace(/\s+/g, ' ').trim();
   
   while (start < cleanedText.length) {
     const end = Math.min(start + chunkSize, cleanedText.length);
     const chunk = cleanedText.slice(start, end).trim();
-    if (chunk.length > 50) { // Only add meaningful chunks
+    if (chunk.length > 50) {
       chunks.push(chunk);
     }
     start += chunkSize - overlap;
@@ -27,10 +27,8 @@ function chunkText(text: string, chunkSize = 800, overlap = 150): string[] {
 }
 
 // Generate embeddings using Lovable AI
-async function generateEmbedding(text: string, apiKey: string): Promise<number[] | null> {
+async function generateEmbedding(text: string, apiKey: string): Promise<string[] | null> {
   try {
-    // Use the chat API to generate a semantic representation
-    // We'll ask the model to create a numerical fingerprint
     const response = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
       method: 'POST',
       headers: {
@@ -42,7 +40,7 @@ async function generateEmbedding(text: string, apiKey: string): Promise<number[]
         messages: [
           { 
             role: 'system', 
-            content: 'You are an embedding generator. Extract the key semantic concepts from the text and return them as a comma-separated list of the 10 most important keywords/phrases. Only return the keywords, nothing else.' 
+            content: 'Extract the key semantic concepts from the text and return them as a comma-separated list of the 10 most important keywords/phrases. Only return the keywords, nothing else.' 
           },
           { role: 'user', content: text.substring(0, 1500) }
         ],
@@ -56,9 +54,6 @@ async function generateEmbedding(text: string, apiKey: string): Promise<number[]
 
     const data = await response.json();
     const keywords = data.choices?.[0]?.message?.content || '';
-    
-    // Convert keywords to a simple hash-based embedding
-    // This is a simplified approach - in production you'd use a proper embedding model
     const keywordList = keywords.toLowerCase().split(',').map((k: string) => k.trim()).filter(Boolean);
     
     return keywordList;
@@ -68,25 +63,22 @@ async function generateEmbedding(text: string, apiKey: string): Promise<number[]
   }
 }
 
-// Extract text from PDF using basic parsing
+// Extract text from PDF
 async function extractTextFromPDF(arrayBuffer: ArrayBuffer): Promise<string> {
   const bytes = new Uint8Array(arrayBuffer);
   const text: string[] = [];
   
-  // Convert to string for parsing
   let pdfString = '';
   for (let i = 0; i < bytes.length; i++) {
     pdfString += String.fromCharCode(bytes[i]);
   }
   
-  // Extract text between BT (begin text) and ET (end text) markers
   const btEtPattern = /BT\s*([\s\S]*?)\s*ET/g;
   let match;
   
   while ((match = btEtPattern.exec(pdfString)) !== null) {
     const textBlock = match[1];
     
-    // Extract text from Tj and TJ operators
     const tjPattern = /\(([^)]*)\)\s*Tj/g;
     let tjMatch;
     while ((tjMatch = tjPattern.exec(textBlock)) !== null) {
@@ -100,7 +92,6 @@ async function extractTextFromPDF(arrayBuffer: ArrayBuffer): Promise<string> {
       text.push(extracted);
     }
     
-    // Extract text from TJ arrays
     const tjArrayPattern = /\[(.*?)\]\s*TJ/g;
     let tjArrayMatch;
     while ((tjArrayMatch = tjArrayPattern.exec(textBlock)) !== null) {
@@ -120,11 +111,9 @@ async function extractTextFromPDF(arrayBuffer: ArrayBuffer): Promise<string> {
     }
   }
   
-  // Also try to extract from stream objects (for more complex PDFs)
   const streamPattern = /stream\s*([\s\S]*?)\s*endstream/g;
   while ((match = streamPattern.exec(pdfString)) !== null) {
     const streamContent = match[1];
-    // Look for readable ASCII text sequences
     const readableText = streamContent.match(/[A-Za-z][A-Za-z0-9\s.,;:!?'-]{10,}/g);
     if (readableText) {
       text.push(...readableText);
@@ -133,6 +122,169 @@ async function extractTextFromPDF(arrayBuffer: ArrayBuffer): Promise<string> {
   
   const result = text.join(' ').replace(/\s+/g, ' ').trim();
   console.log('Extracted PDF text length:', result.length);
+  
+  return result;
+}
+
+// Extract text from DOCX (Office Open XML)
+async function extractTextFromDOCX(arrayBuffer: ArrayBuffer): Promise<string> {
+  try {
+    const zip = new JSZip();
+    await zip.loadAsync(arrayBuffer);
+    
+    // Main document content is in word/document.xml
+    const documentXml = await zip.file('word/document.xml')?.async('string');
+    
+    if (!documentXml) {
+      console.error('No document.xml found in DOCX');
+      return '';
+    }
+    
+    // Extract text from XML - look for <w:t> tags which contain text
+    const textContent: string[] = [];
+    
+    // Match all text nodes
+    const textPattern = /<w:t[^>]*>([^<]*)<\/w:t>/g;
+    let match;
+    while ((match = textPattern.exec(documentXml)) !== null) {
+      if (match[1].trim()) {
+        textContent.push(match[1]);
+      }
+    }
+    
+    // Also extract from paragraph tags for structure
+    const paragraphPattern = /<w:p[^>]*>([\s\S]*?)<\/w:p>/g;
+    const paragraphs: string[] = [];
+    
+    while ((match = paragraphPattern.exec(documentXml)) !== null) {
+      const paragraphXml = match[1];
+      const texts: string[] = [];
+      const innerTextPattern = /<w:t[^>]*>([^<]*)<\/w:t>/g;
+      let innerMatch;
+      while ((innerMatch = innerTextPattern.exec(paragraphXml)) !== null) {
+        texts.push(innerMatch[1]);
+      }
+      if (texts.length > 0) {
+        paragraphs.push(texts.join(''));
+      }
+    }
+    
+    const result = paragraphs.join('\n').replace(/\s+/g, ' ').trim();
+    console.log('Extracted DOCX text length:', result.length);
+    
+    return result || textContent.join(' ');
+  } catch (error) {
+    console.error('Error extracting DOCX:', error);
+    return '';
+  }
+}
+
+// Extract text from XLSX (Office Open XML Spreadsheet)
+async function extractTextFromXLSX(arrayBuffer: ArrayBuffer): Promise<string> {
+  try {
+    const zip = new JSZip();
+    await zip.loadAsync(arrayBuffer);
+    
+    // Get shared strings (text values are stored separately)
+    const sharedStringsXml = await zip.file('xl/sharedStrings.xml')?.async('string');
+    const sharedStrings: string[] = [];
+    
+    if (sharedStringsXml) {
+      // Extract text from shared strings
+      const stringPattern = /<t[^>]*>([^<]*)<\/t>/g;
+      let match;
+      while ((match = stringPattern.exec(sharedStringsXml)) !== null) {
+        sharedStrings.push(match[1]);
+      }
+    }
+    
+    // Get all sheet data
+    const allText: string[] = [];
+    const sheetFiles = Object.keys(zip.files).filter(f => f.startsWith('xl/worksheets/sheet') && f.endsWith('.xml'));
+    
+    for (const sheetFile of sheetFiles) {
+      const sheetXml = await zip.file(sheetFile)?.async('string');
+      if (!sheetXml) continue;
+      
+      // Extract cell values
+      const cellPattern = /<c[^>]*(?:t="s"[^>]*)?>[\s\S]*?<v>(\d+)<\/v>[\s\S]*?<\/c>/g;
+      const inlineCellPattern = /<c[^>]*>[\s\S]*?<is>[\s\S]*?<t>([^<]*)<\/t>[\s\S]*?<\/is>[\s\S]*?<\/c>/g;
+      const valueCellPattern = /<c[^>]*(?:t="n"[^>]*)?>[\s\S]*?<v>([^<]+)<\/v>[\s\S]*?<\/c>/g;
+      
+      let match;
+      
+      // Get string references
+      while ((match = cellPattern.exec(sheetXml)) !== null) {
+        const index = parseInt(match[1], 10);
+        if (sharedStrings[index]) {
+          allText.push(sharedStrings[index]);
+        }
+      }
+      
+      // Get inline strings
+      while ((match = inlineCellPattern.exec(sheetXml)) !== null) {
+        if (match[1].trim()) {
+          allText.push(match[1]);
+        }
+      }
+      
+      // Get numeric values
+      while ((match = valueCellPattern.exec(sheetXml)) !== null) {
+        if (match[1].trim() && !isNaN(Number(match[1]))) {
+          allText.push(match[1]);
+        }
+      }
+    }
+    
+    // Also add all shared strings that might contain useful data
+    allText.push(...sharedStrings);
+    
+    const result = [...new Set(allText)].join(' ').replace(/\s+/g, ' ').trim();
+    console.log('Extracted XLSX text length:', result.length);
+    
+    return result;
+  } catch (error) {
+    console.error('Error extracting XLSX:', error);
+    return '';
+  }
+}
+
+// Extract text from XLS (legacy Excel format - basic extraction)
+async function extractTextFromXLS(arrayBuffer: ArrayBuffer): Promise<string> {
+  // XLS is a binary format, try to extract readable strings
+  const bytes = new Uint8Array(arrayBuffer);
+  const text: string[] = [];
+  
+  let currentString = '';
+  for (let i = 0; i < bytes.length; i++) {
+    const byte = bytes[i];
+    // Check if it's a printable ASCII character
+    if (byte >= 32 && byte <= 126) {
+      currentString += String.fromCharCode(byte);
+    } else if (currentString.length > 3) {
+      // Only keep strings longer than 3 characters
+      text.push(currentString);
+      currentString = '';
+    } else {
+      currentString = '';
+    }
+  }
+  
+  if (currentString.length > 3) {
+    text.push(currentString);
+  }
+  
+  // Filter out common binary artifacts
+  const filtered = text.filter(s => {
+    // Keep strings that look like real content
+    const hasLetters = /[a-zA-Z]{2,}/.test(s);
+    const notJustNumbers = !/^\d+$/.test(s);
+    const notBinary = !/[^\x20-\x7E]/.test(s);
+    return hasLetters && notJustNumbers && notBinary && s.length > 5;
+  });
+  
+  const result = filtered.join(' ').replace(/\s+/g, ' ').trim();
+  console.log('Extracted XLS text length:', result.length);
   
   return result;
 }
@@ -183,22 +335,29 @@ serve(async (req) => {
     // Extract text content based on file type
     let textContent = '';
     const fileName = filePath.toLowerCase();
+    const arrayBuffer = await fileData.arrayBuffer();
     
     if (fileName.endsWith('.pdf')) {
       console.log('Processing PDF file...');
-      const arrayBuffer = await fileData.arrayBuffer();
       textContent = await extractTextFromPDF(arrayBuffer);
       
-      // If basic parsing fails, try to extract any readable content
       if (textContent.length < 100) {
         console.log('Basic PDF parsing yielded little content, trying fallback...');
         const rawText = await fileData.text();
-        // Extract any readable strings from the raw PDF
         const readableStrings = rawText.match(/[A-Za-z][A-Za-z0-9\s.,;:!?'"-]{20,}/g);
         if (readableStrings) {
           textContent = readableStrings.join(' ');
         }
       }
+    } else if (fileName.endsWith('.docx')) {
+      console.log('Processing DOCX file...');
+      textContent = await extractTextFromDOCX(arrayBuffer);
+    } else if (fileName.endsWith('.xlsx')) {
+      console.log('Processing XLSX file...');
+      textContent = await extractTextFromXLSX(arrayBuffer);
+    } else if (fileName.endsWith('.xls')) {
+      console.log('Processing XLS file...');
+      textContent = await extractTextFromXLS(arrayBuffer);
     } else if (fileName.endsWith('.txt') || fileName.endsWith('.md')) {
       textContent = await fileData.text();
     } else if (fileName.endsWith('.json')) {
@@ -207,7 +366,6 @@ serve(async (req) => {
     } else if (fileName.endsWith('.csv')) {
       textContent = await fileData.text();
     } else {
-      // For other files, try to read as text
       textContent = await fileData.text();
     }
 
@@ -229,15 +387,26 @@ serve(async (req) => {
     const chunks = chunkText(textContent);
     console.log('Created chunks:', chunks.length);
 
+    // Determine file type for source_type
+    let sourceType: 'pdf' | 'web' | 'table' | 'report' | 'api' = 'web';
+    if (fileName.endsWith('.pdf')) sourceType = 'pdf';
+    else if (fileName.endsWith('.xlsx') || fileName.endsWith('.xls') || fileName.endsWith('.csv')) sourceType = 'table';
+    else if (fileName.endsWith('.docx') || fileName.endsWith('.doc')) sourceType = 'report';
+
     // Create a data source entry
     const { data: sourceData, error: sourceError } = await supabase
       .from('data_sources')
       .insert({
-        source_type: fileName.endsWith('.pdf') ? 'pdf' : 'document' as any,
+        source_type: sourceType,
         url: filePath,
         title: filePath.split('/').pop(),
         content: textContent.substring(0, 5000),
-        metadata: { documentId, chunksCount: chunks.length, fileType: fileName.split('.').pop() }
+        metadata: { 
+          documentId, 
+          chunksCount: chunks.length, 
+          fileType: fileName.split('.').pop(),
+          originalLength: textContent.length
+        }
       })
       .select()
       .single();
@@ -255,8 +424,7 @@ serve(async (req) => {
       const chunk = chunks[index];
       let embeddingData = null;
       
-      // Generate semantic keywords/embedding for each chunk
-      if (lovableApiKey && index < 20) { // Limit embedding calls to first 20 chunks
+      if (lovableApiKey && index < 20) {
         embeddingData = await generateEmbedding(chunk, lovableApiKey);
       }
       
@@ -293,6 +461,7 @@ serve(async (req) => {
         success: true,
         chunksCreated: chunks.length,
         documentId,
+        fileType: fileName.split('.').pop(),
         hasEmbeddings: !!lovableApiKey
       }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }

@@ -85,7 +85,7 @@ export const KnowledgeBasePanel = ({ isOpen, onClose, onNewConversation }: Knowl
           file_path: uploadData.path,
           file_type: file.type,
           file_size: file.size,
-          category: getCategoryFromType(file.type),
+          category: getCategoryFromType(file.type, file.name),
           status: 'pending',
         })
         .select()
@@ -158,11 +158,14 @@ export const KnowledgeBasePanel = ({ isOpen, onClose, onNewConversation }: Knowl
     }
   };
 
-  const getCategoryFromType = (mimeType: string): string => {
+  const getCategoryFromType = (mimeType: string, fileName?: string): string => {
     if (mimeType.includes('pdf')) return 'PDF';
+    if (mimeType.includes('spreadsheet') || mimeType.includes('excel') || fileName?.endsWith('.xlsx') || fileName?.endsWith('.xls')) return 'SPREADSHEET';
+    if (mimeType.includes('wordprocessing') || mimeType.includes('msword') || fileName?.endsWith('.docx') || fileName?.endsWith('.doc')) return 'WORD';
     if (mimeType.includes('text')) return 'TEXT';
     if (mimeType.includes('json')) return 'DATA';
-    if (mimeType.includes('markdown')) return 'MARKDOWN';
+    if (mimeType.includes('markdown') || fileName?.endsWith('.md')) return 'MARKDOWN';
+    if (mimeType.includes('csv') || fileName?.endsWith('.csv')) return 'CSV';
     return 'DOCUMENT';
   };
 
@@ -176,9 +179,14 @@ export const KnowledgeBasePanel = ({ isOpen, onClose, onNewConversation }: Knowl
         return 'bg-info/20 text-info';
       case 'INVESTMENT':
       case 'DATA':
+      case 'CSV':
         return 'bg-success/20 text-success';
       case 'MARKDOWN':
         return 'bg-warning/20 text-warning';
+      case 'SPREADSHEET':
+        return 'bg-emerald-500/20 text-emerald-500';
+      case 'WORD':
+        return 'bg-blue-500/20 text-blue-500';
       default:
         return 'bg-muted text-muted-foreground';
     }
@@ -241,7 +249,7 @@ export const KnowledgeBasePanel = ({ isOpen, onClose, onNewConversation }: Knowl
             <input
               ref={fileInputRef}
               type="file"
-              accept=".txt,.md,.json,.pdf"
+              accept=".txt,.md,.json,.pdf,.docx,.doc,.xlsx,.xls,.csv"
               onChange={handleFileUpload}
               className="hidden"
             />
