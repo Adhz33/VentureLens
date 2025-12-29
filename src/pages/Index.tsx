@@ -5,6 +5,9 @@ import { HeroSection } from '@/components/hero/HeroSection';
 import { StatCard } from '@/components/dashboard/StatCard';
 import { FundingChart } from '@/components/dashboard/FundingChart';
 import { SectorBreakdown } from '@/components/dashboard/SectorBreakdown';
+import { FundingComparison } from '@/components/dashboard/FundingComparison';
+import { SectorAnalysis } from '@/components/dashboard/SectorAnalysis';
+import { ExportPanel } from '@/components/dashboard/ExportPanel';
 import { QueryInterface } from '@/components/query/QueryInterface';
 import { InvestorCard } from '@/components/investors/InvestorCard';
 import { PolicyCard } from '@/components/policies/PolicyCard';
@@ -84,13 +87,16 @@ const Index = () => {
           <div className="absolute inset-0 bg-grid-pattern bg-grid opacity-20" />
           
           <div className="container mx-auto px-4 relative z-10">
-            <div className="text-center mb-12">
-              <h2 className="font-display font-bold text-3xl md:text-4xl text-foreground mb-4">
-                Funding <span className="text-gradient">Dashboard</span>
-              </h2>
-              <p className="text-muted-foreground max-w-2xl mx-auto">
-                Real-time insights into startup ecosystem funding activity
-              </p>
+            <div className="flex items-center justify-between mb-12">
+              <div className="text-center flex-1">
+                <h2 className="font-display font-bold text-3xl md:text-4xl text-foreground mb-4">
+                  Funding <span className="text-gradient">Dashboard</span>
+                </h2>
+                <p className="text-muted-foreground max-w-2xl mx-auto">
+                  Real-time insights into startup ecosystem funding activity
+                </p>
+              </div>
+              <ExportPanel />
             </div>
 
             {/* Stats Grid */}
@@ -130,11 +136,17 @@ const Index = () => {
             </div>
 
             {/* Charts Row */}
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
               <div className="lg:col-span-2">
                 <FundingChart />
               </div>
               <SectorBreakdown />
+            </div>
+
+            {/* Comparison and Analysis Row */}
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              <FundingComparison />
+              <SectorAnalysis />
             </div>
           </div>
         </section>
