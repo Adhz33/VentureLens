@@ -14,7 +14,241 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      data_sources: {
+        Row: {
+          content: string | null
+          created_at: string
+          id: string
+          metadata: Json | null
+          source_type: Database["public"]["Enums"]["source_type"]
+          title: string | null
+          updated_at: string
+          url: string
+        }
+        Insert: {
+          content?: string | null
+          created_at?: string
+          id?: string
+          metadata?: Json | null
+          source_type?: Database["public"]["Enums"]["source_type"]
+          title?: string | null
+          updated_at?: string
+          url: string
+        }
+        Update: {
+          content?: string | null
+          created_at?: string
+          id?: string
+          metadata?: Json | null
+          source_type?: Database["public"]["Enums"]["source_type"]
+          title?: string | null
+          updated_at?: string
+          url?: string
+        }
+        Relationships: []
+      }
+      embeddings: {
+        Row: {
+          chunk_index: number
+          content_chunk: string
+          created_at: string
+          embedding_data: Json | null
+          id: string
+          metadata: Json | null
+          source_id: string | null
+        }
+        Insert: {
+          chunk_index?: number
+          content_chunk: string
+          created_at?: string
+          embedding_data?: Json | null
+          id?: string
+          metadata?: Json | null
+          source_id?: string | null
+        }
+        Update: {
+          chunk_index?: number
+          content_chunk?: string
+          created_at?: string
+          embedding_data?: Json | null
+          id?: string
+          metadata?: Json | null
+          source_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "embeddings_source_id_fkey"
+            columns: ["source_id"]
+            isOneToOne: false
+            referencedRelation: "data_sources"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      funding_data: {
+        Row: {
+          created_at: string
+          funding_amount: number | null
+          funding_date: string | null
+          funding_round: string | null
+          id: string
+          investor_name: string | null
+          location: string | null
+          metadata: Json | null
+          sector: string | null
+          source_id: string | null
+          startup_name: string
+        }
+        Insert: {
+          created_at?: string
+          funding_amount?: number | null
+          funding_date?: string | null
+          funding_round?: string | null
+          id?: string
+          investor_name?: string | null
+          location?: string | null
+          metadata?: Json | null
+          sector?: string | null
+          source_id?: string | null
+          startup_name: string
+        }
+        Update: {
+          created_at?: string
+          funding_amount?: number | null
+          funding_date?: string | null
+          funding_round?: string | null
+          id?: string
+          investor_name?: string | null
+          location?: string | null
+          metadata?: Json | null
+          sector?: string | null
+          source_id?: string | null
+          startup_name?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "funding_data_source_id_fkey"
+            columns: ["source_id"]
+            isOneToOne: false
+            referencedRelation: "data_sources"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      investors: {
+        Row: {
+          created_at: string
+          id: string
+          investor_type: string | null
+          location: string | null
+          metadata: Json | null
+          name: string
+          notable_investments: string[] | null
+          portfolio_focus: string[] | null
+          total_investments: number | null
+          updated_at: string
+          website: string | null
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          investor_type?: string | null
+          location?: string | null
+          metadata?: Json | null
+          name: string
+          notable_investments?: string[] | null
+          portfolio_focus?: string[] | null
+          total_investments?: number | null
+          updated_at?: string
+          website?: string | null
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          investor_type?: string | null
+          location?: string | null
+          metadata?: Json | null
+          name?: string
+          notable_investments?: string[] | null
+          portfolio_focus?: string[] | null
+          total_investments?: number | null
+          updated_at?: string
+          website?: string | null
+        }
+        Relationships: []
+      }
+      policies: {
+        Row: {
+          application_process: string | null
+          benefits: string | null
+          created_at: string
+          deadline: string | null
+          description: string | null
+          eligibility_criteria: string | null
+          id: string
+          issuing_body: string | null
+          metadata: Json | null
+          policy_name: string
+          source_url: string | null
+        }
+        Insert: {
+          application_process?: string | null
+          benefits?: string | null
+          created_at?: string
+          deadline?: string | null
+          description?: string | null
+          eligibility_criteria?: string | null
+          id?: string
+          issuing_body?: string | null
+          metadata?: Json | null
+          policy_name: string
+          source_url?: string | null
+        }
+        Update: {
+          application_process?: string | null
+          benefits?: string | null
+          created_at?: string
+          deadline?: string | null
+          description?: string | null
+          eligibility_criteria?: string | null
+          id?: string
+          issuing_body?: string | null
+          metadata?: Json | null
+          policy_name?: string
+          source_url?: string | null
+        }
+        Relationships: []
+      }
+      query_history: {
+        Row: {
+          created_at: string
+          id: string
+          language: Database["public"]["Enums"]["supported_language"]
+          metadata: Json | null
+          query: string
+          response: string | null
+          sources: Json | null
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          language?: Database["public"]["Enums"]["supported_language"]
+          metadata?: Json | null
+          query: string
+          response?: string | null
+          sources?: Json | null
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          language?: Database["public"]["Enums"]["supported_language"]
+          metadata?: Json | null
+          query?: string
+          response?: string | null
+          sources?: Json | null
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
@@ -23,7 +257,18 @@ export type Database = {
       [_ in never]: never
     }
     Enums: {
-      [_ in never]: never
+      source_type: "web" | "pdf" | "table" | "report" | "api"
+      supported_language:
+        | "en"
+        | "hi"
+        | "ta"
+        | "te"
+        | "bn"
+        | "mr"
+        | "gu"
+        | "kn"
+        | "ml"
+        | "pa"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -150,6 +395,20 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      source_type: ["web", "pdf", "table", "report", "api"],
+      supported_language: [
+        "en",
+        "hi",
+        "ta",
+        "te",
+        "bn",
+        "mr",
+        "gu",
+        "kn",
+        "ml",
+        "pa",
+      ],
+    },
   },
 } as const
