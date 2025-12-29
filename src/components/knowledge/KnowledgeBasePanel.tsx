@@ -1,70 +1,208 @@
-import { useState } from 'react';
-import { Database, Plus, Upload, Search, FileText, X } from 'lucide-react';
+import { useState, useEffect, useRef } from 'react';
+import { Database, Plus, Upload, Search, FileText, X, Loader2, Trash2, CheckCircle, AlertCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
+import { supabase } from '@/integrations/supabase/client';
+import { useToast } from '@/hooks/use-toast';
 
 interface Document {
   id: string;
-  title: string;
-  category: string;
-  description: string;
+  file_name: string;
+  file_path: string;
+  file_type: string | null;
+  file_size: number | null;
+  category: string | null;
+  description: string | null;
+  status: string | null;
+  chunks_count: number | null;
+  created_at: string;
 }
-
-const SAMPLE_DOCUMENTS: Document[] = [
-  {
-    id: '1',
-    title: 'Startup India Seed Fund Scheme (SISFS)',
-    category: 'SCHEME',
-    description: 'Official guidelines for the 2021-2025 funding cycle',
-  },
-  {
-    id: '2',
-    title: 'DPIIT Recognition Framework',
-    category: 'POLICY',
-    description: 'Eligibility criteria and benefits for startups',
-  },
-  {
-    id: '3',
-    title: 'Credit Guarantee Scheme',
-    category: 'SCHEME',
-    description: 'SIDBI credit guarantee documentation',
-  },
-  {
-    id: '4',
-    title: 'Fund of Funds Guidelines',
-    category: 'INVESTMENT',
-    description: 'AIF registration and compliance requirements',
-  },
-];
 
 interface KnowledgeBasePanelProps {
   isOpen: boolean;
   onClose: () => void;
+  onNewConversation?: () => void;
 }
 
-export const KnowledgeBasePanel = ({ isOpen, onClose }: KnowledgeBasePanelProps) => {
+export const KnowledgeBasePanel = ({ isOpen, onClose, onNewConversation }: KnowledgeBasePanelProps) => {
   const [searchQuery, setSearchQuery] = useState('');
-  const [documents] = useState<Document[]>(SAMPLE_DOCUMENTS);
+  const [documents, setDocuments] = useState<Document[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [isUploading, setIsUploading] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const { toast } = useToast();
 
-  const filteredDocs = documents.filter(doc =>
-    doc.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    doc.description.toLowerCase().includes(searchQuery.toLowerCase())
-  );
+  const fetchDocuments = async () => {
+    setIsLoading(true);
+    try {
+      const { data, error } = await supabase
+        .from('knowledge_documents')
+        .select('*')
+        .order('created_at', { ascending: false });
 
-  const getCategoryColor = (category: string) => {
+      if (error) throw error;
+      setDocuments(data || []);
+    } catch (error) {
+      console.error('Error fetching documents:', error);
+      toast({
+        title: 'Error',
+        description: 'Failed to load documents',
+        variant: 'destructive',
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    if (isOpen) {
+      fetchDocuments();
+    }
+  }, [isOpen]);
+
+  const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    setIsUploading(true);
+    try {
+      // Upload to storage
+      const fileName = `${Date.now()}-${file.name}`;
+      const { data: uploadData, error: uploadError } = await supabase
+        .storage
+        .from('knowledge-base')
+        .upload(fileName, file);
+
+      if (uploadError) throw uploadError;
+
+      // Create document record
+      const { data: docData, error: docError } = await supabase
+        .from('knowledge_documents')
+        .insert({
+          file_name: file.name,
+          file_path: uploadData.path,
+          file_type: file.type,
+          file_size: file.size,
+          category: getCategoryFromType(file.type),
+          status: 'pending',
+        })
+        .select()
+        .single();
+
+      if (docError) throw docError;
+
+      toast({
+        title: 'Document uploaded',
+        description: 'Processing document for RAG...',
+      });
+
+      // Trigger document processing
+      const { error: processError } = await supabase.functions.invoke('process-document', {
+        body: { documentId: docData.id, filePath: uploadData.path }
+      });
+
+      if (processError) {
+        console.error('Processing error:', processError);
+        toast({
+          title: 'Processing started',
+          description: 'Document will be ready shortly',
+        });
+      }
+
+      // Refresh documents list
+      fetchDocuments();
+
+    } catch (error) {
+      console.error('Upload error:', error);
+      toast({
+        title: 'Upload failed',
+        description: error instanceof Error ? error.message : 'Failed to upload document',
+        variant: 'destructive',
+      });
+    } finally {
+      setIsUploading(false);
+      if (fileInputRef.current) {
+        fileInputRef.current.value = '';
+      }
+    }
+  };
+
+  const handleDeleteDocument = async (doc: Document) => {
+    try {
+      // Delete from storage
+      await supabase.storage.from('knowledge-base').remove([doc.file_path]);
+      
+      // Delete document record
+      const { error } = await supabase
+        .from('knowledge_documents')
+        .delete()
+        .eq('id', doc.id);
+
+      if (error) throw error;
+
+      toast({
+        title: 'Document deleted',
+        description: doc.file_name,
+      });
+
+      fetchDocuments();
+    } catch (error) {
+      console.error('Delete error:', error);
+      toast({
+        title: 'Delete failed',
+        description: 'Failed to delete document',
+        variant: 'destructive',
+      });
+    }
+  };
+
+  const getCategoryFromType = (mimeType: string): string => {
+    if (mimeType.includes('pdf')) return 'PDF';
+    if (mimeType.includes('text')) return 'TEXT';
+    if (mimeType.includes('json')) return 'DATA';
+    if (mimeType.includes('markdown')) return 'MARKDOWN';
+    return 'DOCUMENT';
+  };
+
+  const getCategoryColor = (category: string | null) => {
     switch (category) {
       case 'SCHEME':
+      case 'PDF':
         return 'bg-primary/20 text-primary';
       case 'POLICY':
+      case 'TEXT':
         return 'bg-info/20 text-info';
       case 'INVESTMENT':
+      case 'DATA':
         return 'bg-success/20 text-success';
+      case 'MARKDOWN':
+        return 'bg-warning/20 text-warning';
       default:
         return 'bg-muted text-muted-foreground';
     }
   };
+
+  const getStatusIcon = (status: string | null) => {
+    switch (status) {
+      case 'ready':
+        return <CheckCircle className="w-3 h-3 text-success" />;
+      case 'processing':
+        return <Loader2 className="w-3 h-3 text-primary animate-spin" />;
+      case 'error':
+        return <AlertCircle className="w-3 h-3 text-destructive" />;
+      default:
+        return <Loader2 className="w-3 h-3 text-muted-foreground animate-spin" />;
+    }
+  };
+
+  const filteredDocs = documents.filter(doc =>
+    doc.file_name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    (doc.description || '').toLowerCase().includes(searchQuery.toLowerCase())
+  );
+
+  const readyDocsCount = documents.filter(d => d.status === 'ready').length;
 
   return (
     <aside
@@ -96,13 +234,29 @@ export const KnowledgeBasePanel = ({ isOpen, onClose }: KnowledgeBasePanelProps)
 
           {/* Actions */}
           <div className="p-4 space-y-3 border-b border-border">
-            <Button className="w-full gap-2" size="lg">
+            <Button className="w-full gap-2" size="lg" onClick={onNewConversation}>
               <Plus className="w-4 h-4" />
               New Conversation
             </Button>
-            <Button variant="outline" className="w-full gap-2">
-              <Upload className="w-4 h-4" />
-              Upload Document
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept=".txt,.md,.json,.pdf"
+              onChange={handleFileUpload}
+              className="hidden"
+            />
+            <Button 
+              variant="outline" 
+              className="w-full gap-2"
+              onClick={() => fileInputRef.current?.click()}
+              disabled={isUploading}
+            >
+              {isUploading ? (
+                <Loader2 className="w-4 h-4 animate-spin" />
+              ) : (
+                <Upload className="w-4 h-4" />
+              )}
+              {isUploading ? 'Uploading...' : 'Upload Document'}
             </Button>
           </div>
 
@@ -123,7 +277,7 @@ export const KnowledgeBasePanel = ({ isOpen, onClose }: KnowledgeBasePanelProps)
           <div className="p-4 border-b border-border">
             <div className="bg-primary/10 border border-primary/20 rounded-xl p-4 flex items-center gap-4">
               <div className="text-center">
-                <div className="text-2xl font-bold text-foreground">{documents.length}</div>
+                <div className="text-2xl font-bold text-foreground">{readyDocsCount}</div>
                 <div className="text-xs text-muted-foreground uppercase tracking-wider">Docs</div>
               </div>
               <div className="border-l border-primary/30 h-10" />
@@ -139,31 +293,55 @@ export const KnowledgeBasePanel = ({ isOpen, onClose }: KnowledgeBasePanelProps)
             <h3 className="text-xs font-medium text-muted-foreground uppercase tracking-wider mb-3">
               Active Documents
             </h3>
-            <div className="space-y-3">
-              {filteredDocs.map((doc) => (
-                <div
-                  key={doc.id}
-                  className="p-4 bg-secondary/30 hover:bg-secondary/50 rounded-xl border border-border/50 cursor-pointer transition-colors"
-                >
-                  <div className="flex items-start gap-3">
-                    <div className="w-8 h-8 rounded-lg bg-muted flex items-center justify-center flex-shrink-0 mt-1">
-                      <FileText className="w-4 h-4 text-muted-foreground" />
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <Badge className={cn("text-[10px] mb-1.5", getCategoryColor(doc.category))}>
-                        {doc.category}
-                      </Badge>
-                      <h4 className="font-medium text-sm text-foreground leading-tight mb-1">
-                        {doc.title}
-                      </h4>
-                      <p className="text-xs text-muted-foreground line-clamp-2">
-                        {doc.description}
-                      </p>
+            
+            {isLoading ? (
+              <div className="flex items-center justify-center py-8">
+                <Loader2 className="w-6 h-6 animate-spin text-primary" />
+              </div>
+            ) : filteredDocs.length === 0 ? (
+              <div className="text-center py-8 text-muted-foreground text-sm">
+                {documents.length === 0 
+                  ? 'No documents uploaded yet'
+                  : 'No documents match your search'}
+              </div>
+            ) : (
+              <div className="space-y-3">
+                {filteredDocs.map((doc) => (
+                  <div
+                    key={doc.id}
+                    className="p-4 bg-secondary/30 hover:bg-secondary/50 rounded-xl border border-border/50 transition-colors group"
+                  >
+                    <div className="flex items-start gap-3">
+                      <div className="w-8 h-8 rounded-lg bg-muted flex items-center justify-center flex-shrink-0 mt-1">
+                        <FileText className="w-4 h-4 text-muted-foreground" />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-2 mb-1.5">
+                          <Badge className={cn("text-[10px]", getCategoryColor(doc.category))}>
+                            {doc.category || 'DOCUMENT'}
+                          </Badge>
+                          {getStatusIcon(doc.status)}
+                        </div>
+                        <h4 className="font-medium text-sm text-foreground leading-tight mb-1 truncate">
+                          {doc.file_name}
+                        </h4>
+                        <p className="text-xs text-muted-foreground">
+                          {doc.chunks_count ? `${doc.chunks_count} chunks` : 'Processing...'}
+                          {doc.file_size && ` • ${(doc.file_size / 1024).toFixed(1)}KB`}
+                        </p>
+                      </div>
+                      <button
+                        onClick={() => handleDeleteDocument(doc)}
+                        className="p-1.5 rounded-lg opacity-0 group-hover:opacity-100 hover:bg-destructive/20 transition-all"
+                        title="Delete document"
+                      >
+                        <Trash2 className="w-4 h-4 text-destructive" />
+                      </button>
                     </div>
                   </div>
-                </div>
-              ))}
-            </div>
+                ))}
+              </div>
+            )}
           </div>
 
           {/* Footer */}

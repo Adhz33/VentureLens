@@ -1,4 +1,5 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2.49.1";
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -18,13 +19,32 @@ const SUPPORTED_LANGUAGES: Record<string, { name: string; prompt: string }> = {
   pa: { name: 'Punjabi', prompt: 'ਪੰਜਾਬੀ ਵਿੱਚ ਜਵਾਬ ਦਿਓ. Respond in Punjabi.' },
 };
 
+// Simple keyword-based retrieval (in production, use vector similarity)
+function retrieveRelevantChunks(query: string, chunks: any[], maxChunks = 5): any[] {
+  const queryWords = query.toLowerCase().split(/\s+/).filter(w => w.length > 3);
+  
+  const scored = chunks.map(chunk => {
+    const content = (chunk.content_chunk || '').toLowerCase();
+    let score = 0;
+    queryWords.forEach(word => {
+      if (content.includes(word)) score++;
+    });
+    return { ...chunk, score };
+  });
+
+  return scored
+    .filter(c => c.score > 0)
+    .sort((a, b) => b.score - a.score)
+    .slice(0, maxChunks);
+}
+
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
   }
 
   try {
-    const { query, language = 'en', conversationHistory = [] } = await req.json();
+    const { query, language = 'en', conversationHistory = [], useKnowledgeBase = true } = await req.json();
 
     if (!query) {
       return new Response(
@@ -44,6 +64,45 @@ serve(async (req) => {
 
     const langConfig = SUPPORTED_LANGUAGES[language] || SUPPORTED_LANGUAGES.en;
     
+    // Retrieve relevant context from knowledge base
+    let contextChunks: any[] = [];
+    let documentSources: any[] = [];
+    
+    if (useKnowledgeBase) {
+      const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
+      const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
+      const supabase = createClient(supabaseUrl, supabaseKey);
+
+      // Get all embeddings/chunks
+      const { data: embeddings, error: embError } = await supabase
+        .from('embeddings')
+        .select('content_chunk, metadata, source_id')
+        .limit(500);
+
+      if (!embError && embeddings && embeddings.length > 0) {
+        console.log('Found embeddings:', embeddings.length);
+        contextChunks = retrieveRelevantChunks(query, embeddings);
+        console.log('Retrieved relevant chunks:', contextChunks.length);
+
+        // Get document names for sources
+        if (contextChunks.length > 0) {
+          const { data: docs } = await supabase
+            .from('knowledge_documents')
+            .select('id, file_name, category')
+            .in('id', contextChunks.map(c => c.metadata?.documentId).filter(Boolean));
+          
+          if (docs) {
+            documentSources = docs;
+          }
+        }
+      }
+    }
+
+    // Build context string from retrieved chunks
+    const contextText = contextChunks.length > 0
+      ? `\n\nRelevant context from uploaded documents:\n${contextChunks.map((c, i) => `[${i + 1}] ${c.content_chunk}`).join('\n\n')}`
+      : '';
+
     const systemPrompt = `You are FundingIQ, an expert AI assistant specializing in Indian startup funding intelligence. Your role is to provide accurate, grounded insights about:
 
 1. **Startup Funding**: Investment rounds, valuations, funding trends, deal sizes
@@ -57,22 +116,18 @@ Guidelines:
 - Cite sources when possible and mention if data might be outdated
 - Be transparent about limitations of your knowledge
 - For policy questions, mention eligibility criteria and deadlines when known
+- If context from uploaded documents is provided, prioritize that information and cite it
 
 ${langConfig.prompt}
-
-Current knowledge includes major Indian startup ecosystem data up to early 2024, including:
-- Top funded startups like BYJU's, Swiggy, Razorpay, Zerodha, PhonePe
-- Major investors: Sequoia Capital, Accel, Tiger Global, SoftBank, Peak XV
-- Government schemes: Startup India Seed Fund, Fund of Funds, Credit Guarantee Scheme
-- Key sectors: FinTech, EdTech, HealthTech, E-commerce, SaaS, DeepTech`;
+${contextText}`;
 
     const messages = [
       { role: 'system', content: systemPrompt },
-      ...conversationHistory.slice(-10), // Keep last 10 messages for context
+      ...conversationHistory.slice(-10),
       { role: 'user', content: query }
     ];
 
-    console.log('Processing RAG query:', query.substring(0, 100), 'Language:', language);
+    console.log('Processing RAG query:', query.substring(0, 100), 'Language:', language, 'Context chunks:', contextChunks.length);
 
     const response = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
       method: 'POST',
@@ -83,8 +138,7 @@ Current knowledge includes major Indian startup ecosystem data up to early 2024,
       body: JSON.stringify({
         model: 'google/gemini-2.5-flash',
         messages,
-        temperature: 0.7,
-        max_tokens: 2048,
+        stream: true,
       }),
     });
 
@@ -111,25 +165,17 @@ Current knowledge includes major Indian startup ecosystem data up to early 2024,
       );
     }
 
-    const data = await response.json();
-    const aiResponse = data.choices?.[0]?.message?.content || 'I apologize, but I could not generate a response.';
-
-    // Mock sources for demo - in production, these would come from RAG retrieval
-    const sources = [
-      { title: 'Inc42 Funding Report', url: 'https://inc42.com/buzz/funding-galore' },
-      { title: 'Startup India Portal', url: 'https://startupindia.gov.in' },
-    ];
-
-    console.log('RAG query completed successfully');
-
-    return new Response(
-      JSON.stringify({ 
-        response: aiResponse,
-        sources,
-        language: langConfig.name,
-      }),
-      { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-    );
+    // Return streaming response
+    return new Response(response.body, {
+      headers: { 
+        ...corsHeaders, 
+        'Content-Type': 'text/event-stream',
+        'X-Document-Sources': JSON.stringify(documentSources.map(d => ({ 
+          name: d.file_name, 
+          category: d.category 
+        })))
+      },
+    });
 
   } catch (error) {
     console.error('RAG query error:', error);
