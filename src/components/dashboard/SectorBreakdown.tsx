@@ -69,8 +69,8 @@ export const SectorBreakdown = ({ data, isLoading }: SectorBreakdownProps) => {
   const [selectedYear, setSelectedYear] = useState('2024');
   const [hoveredSector, setHoveredSector] = useState<string | null>(null);
   
-  const fallbackData = fallbackDataByYear[selectedYear] || fallbackDataByYear['2024'];
-  const chartData = data && data.length > 0 ? data : fallbackData;
+  // Always use fallback data for consistent sector display
+  const chartData = fallbackDataByYear[selectedYear] || fallbackDataByYear['2024'];
   
   const totalValue = chartData.reduce((sum, item) => sum + item.value, 0);
 
