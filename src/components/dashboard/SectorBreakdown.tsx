@@ -69,8 +69,38 @@ export const SectorBreakdown = ({ data, isLoading }: SectorBreakdownProps) => {
   const [selectedYear, setSelectedYear] = useState('2024');
   const [hoveredSector, setHoveredSector] = useState<string | null>(null);
   
-  // Always use fallback data for consistent sector display
-  const chartData = fallbackDataByYear[selectedYear] || fallbackDataByYear['2024'];
+  // Use real data if available (has meaningful values), otherwise use fallback
+  const hasRealData = data && data.length > 0 && data.some(d => d.value > 0);
+  
+  // Merge real data with fallback to ensure all sectors are shown
+  const chartData = (() => {
+    if (!hasRealData) {
+      return fallbackDataByYear[selectedYear] || fallbackDataByYear['2024'];
+    }
+    
+    // Create a map of real data by sector name
+    const realDataMap = new Map(data.map(d => [d.name, d]));
+    
+    // Ensure all 7 sectors are present, using real data where available
+    const sectors = ['CleanTech', 'DeepTech/AI', 'E-commerce', 'Enterprise/SaaS', 'FinTech', 'HealthTech', 'Others'];
+    const colors = ['#EF4444', '#F97316', '#3B82F6', '#06B6D4', '#2563EB', '#A855F7', '#6B7280'];
+    
+    return sectors.map((sector, index) => {
+      const realSector = realDataMap.get(sector);
+      if (realSector) {
+        return { ...realSector, color: colors[index] };
+      }
+      // Check for partial matches (e.g., "AI" matches "DeepTech/AI")
+      const partialMatch = data.find(d => 
+        d.name.toLowerCase().includes(sector.toLowerCase()) || 
+        sector.toLowerCase().includes(d.name.toLowerCase())
+      );
+      if (partialMatch) {
+        return { ...partialMatch, name: sector, color: colors[index] };
+      }
+      return { name: sector, value: 0, deals: 0, startups: [], color: colors[index] };
+    });
+  })();
   
   const totalValue = chartData.reduce((sum, item) => sum + item.value, 0);
 
