@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { MessageSquare, BarChart3, Building2, FileText, Database, Globe, Sparkles, ChevronLeft, ChevronRight } from 'lucide-react';
+import { MessageSquare, BarChart3, Building2, FileText, Database, Globe, Sparkles, ChevronLeft, ChevronRight, BookOpen } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { SUPPORTED_LANGUAGES, LanguageCode } from '@/lib/constants';
 import { cn } from '@/lib/utils';
@@ -7,6 +7,8 @@ import { cn } from '@/lib/utils';
 interface AppSidebarProps {
   selectedLanguage: LanguageCode;
   onLanguageChange: (lang: LanguageCode) => void;
+  onToggleKnowledgeBase?: () => void;
+  isKnowledgeBaseOpen?: boolean;
 }
 
 const menuItems = [
@@ -17,7 +19,7 @@ const menuItems = [
   { id: 'sources', label: 'Data Sources', icon: Database, href: '#sources' },
 ];
 
-export const AppSidebar = ({ selectedLanguage, onLanguageChange }: AppSidebarProps) => {
+export const AppSidebar = ({ selectedLanguage, onLanguageChange, onToggleKnowledgeBase, isKnowledgeBaseOpen }: AppSidebarProps) => {
   const [activeItem, setActiveItem] = useState('query');
   const [isLangOpen, setIsLangOpen] = useState(false);
   const [isCollapsed, setIsCollapsed] = useState(false);
@@ -101,6 +103,24 @@ export const AppSidebar = ({ selectedLanguage, onLanguageChange }: AppSidebarPro
           );
         })}
       </nav>
+
+      {/* Knowledge Base Toggle */}
+      <div className={cn("px-3 pb-2", isCollapsed && "px-2")}>
+        <button
+          onClick={onToggleKnowledgeBase}
+          className={cn(
+            "flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-all duration-200 w-full",
+            isKnowledgeBaseOpen
+              ? "bg-primary/20 text-primary border border-primary/30"
+              : "text-muted-foreground hover:bg-secondary hover:text-foreground",
+            isCollapsed && "justify-center px-3"
+          )}
+          title={isCollapsed ? "Knowledge Base" : undefined}
+        >
+          <BookOpen className="w-5 h-5 flex-shrink-0" />
+          {!isCollapsed && <span>Knowledge Base</span>}
+        </button>
+      </div>
 
       {/* Language Selector */}
       <div className={cn("p-4 border-t border-border", isCollapsed && "px-2")}>
