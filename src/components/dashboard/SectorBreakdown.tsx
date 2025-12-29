@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip } from 'recharts';
-import { Loader2 } from 'lucide-react';
+import { BarChart2, Loader2 } from 'lucide-react';
 import { SectorDrilldown } from './SectorDrilldown';
 
 interface SectorData {
@@ -17,12 +17,13 @@ interface SectorBreakdownProps {
 }
 
 const fallbackData: SectorData[] = [
-  { name: 'FinTech', value: 3200, deals: 45, startups: [], color: 'hsl(32, 95%, 55%)' },
-  { name: 'HealthTech', value: 2400, deals: 32, startups: [], color: 'hsl(199, 89%, 48%)' },
-  { name: 'EdTech', value: 1800, deals: 28, startups: [], color: 'hsl(142, 76%, 36%)' },
-  { name: 'E-commerce', value: 1500, deals: 22, startups: [], color: 'hsl(280, 65%, 60%)' },
-  { name: 'SaaS', value: 1200, deals: 18, startups: [], color: 'hsl(38, 92%, 50%)' },
-  { name: 'Others', value: 900, deals: 15, startups: [], color: 'hsl(215, 20%, 55%)' },
+  { name: 'CleanTech', value: 2100, deals: 28, startups: [], color: '#EF4444' },
+  { name: 'DeepTech/AI', value: 1800, deals: 35, startups: [], color: '#F97316' },
+  { name: 'E-commerce', value: 1500, deals: 22, startups: [], color: '#3B82F6' },
+  { name: 'Enterprise/SaaS', value: 3200, deals: 45, startups: [], color: '#06B6D4' },
+  { name: 'FinTech', value: 2800, deals: 38, startups: [], color: '#2563EB' },
+  { name: 'HealthTech', value: 2400, deals: 32, startups: [], color: '#A855F7' },
+  { name: 'Others', value: 900, deals: 15, startups: [], color: '#6B7280' },
 ];
 
 export const SectorBreakdown = ({ data, isLoading }: SectorBreakdownProps) => {
@@ -36,31 +37,39 @@ export const SectorBreakdown = ({ data, isLoading }: SectorBreakdownProps) => {
 
   return (
     <>
-      <div className="glass rounded-xl p-6 opacity-0 animate-fade-in" style={{ animationDelay: '500ms', animationFillMode: 'forwards' }}>
-        <div className="mb-6">
-          <h3 className="font-display font-semibold text-lg text-foreground">Sector Breakdown</h3>
-          <p className="text-sm text-muted-foreground">Click a sector to view details</p>
+      <div className="bg-card rounded-2xl p-6 border border-border opacity-0 animate-fade-in" style={{ animationDelay: '500ms', animationFillMode: 'forwards' }}>
+        {/* Header */}
+        <div className="flex items-start justify-between mb-6">
+          <div>
+            <h3 className="font-display font-semibold text-lg text-foreground">Sector Distribution</h3>
+            <p className="text-sm text-muted-foreground">Where the money is flowing (2024)</p>
+          </div>
+          <button className="p-2 hover:bg-secondary rounded-lg transition-colors">
+            <BarChart2 className="w-5 h-5 text-muted-foreground" />
+          </button>
         </div>
         
         {isLoading ? (
-          <div className="flex items-center justify-center h-[180px]">
+          <div className="flex items-center justify-center h-[280px]">
             <Loader2 className="w-8 h-8 animate-spin text-primary" />
           </div>
         ) : (
-          <div className="flex items-center gap-6">
-            <div className="w-[180px] h-[180px]">
+          <div className="flex items-center gap-8">
+            {/* Donut Chart with Center Label */}
+            <div className="relative w-[220px] h-[220px] flex-shrink-0">
               <ResponsiveContainer width="100%" height="100%">
                 <PieChart>
                   <Pie
                     data={chartData}
                     cx="50%"
                     cy="50%"
-                    innerRadius={50}
-                    outerRadius={80}
-                    paddingAngle={2}
+                    innerRadius={65}
+                    outerRadius={95}
+                    paddingAngle={4}
                     dataKey="value"
                     onClick={(_, index) => handleSectorClick(chartData[index])}
                     className="cursor-pointer"
+                    strokeWidth={0}
                   >
                     {chartData.map((entry, index) => (
                       <Cell 
@@ -72,32 +81,37 @@ export const SectorBreakdown = ({ data, isLoading }: SectorBreakdownProps) => {
                   </Pie>
                   <Tooltip 
                     contentStyle={{ 
-                      backgroundColor: 'hsl(222, 47%, 10%)', 
-                      border: '1px solid hsl(222, 30%, 18%)',
+                      backgroundColor: 'hsl(var(--card))', 
+                      border: '1px solid hsl(var(--border))',
                       borderRadius: '12px',
+                      boxShadow: '0 4px 12px rgba(0,0,0,0.15)',
                     }}
                     formatter={(value: number) => [`$${value.toFixed(1)}M`, 'Investment']}
                   />
                 </PieChart>
               </ResponsiveContainer>
+              
+              {/* Center Label */}
+              <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
+                <span className="text-3xl font-bold text-foreground">2024</span>
+                <span className="text-xs text-muted-foreground uppercase tracking-wider font-medium">Focus</span>
+              </div>
             </div>
             
+            {/* Legend */}
             <div className="flex-1 space-y-3">
               {chartData.map((item) => (
                 <div 
                   key={item.name} 
-                  className="flex items-center justify-between cursor-pointer hover:bg-background/30 rounded-lg p-2 -m-2 transition-colors"
+                  className="flex items-center gap-3 cursor-pointer hover:bg-secondary/50 rounded-lg py-1.5 px-2 -mx-2 transition-colors"
                   onClick={() => handleSectorClick(item)}
                 >
-                  <div className="flex items-center gap-2">
-                    <div 
-                      className="w-3 h-3 rounded-full" 
-                      style={{ backgroundColor: item.color }}
-                    />
-                    <span className="text-sm text-foreground">{item.name}</span>
-                  </div>
-                  <span className="text-sm font-medium text-muted-foreground">
-                    ${item.value >= 1000 ? `${(item.value / 1000).toFixed(1)}B` : `${item.value.toFixed(0)}M`}
+                  <div 
+                    className="w-2.5 h-2.5 rounded-full flex-shrink-0" 
+                    style={{ backgroundColor: item.color }}
+                  />
+                  <span className="text-sm font-medium" style={{ color: item.color }}>
+                    {item.name}
                   </span>
                 </div>
               ))}
