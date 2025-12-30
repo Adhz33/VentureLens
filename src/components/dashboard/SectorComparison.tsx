@@ -7,6 +7,7 @@ import { BarChart3 } from 'lucide-react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { LanguageCode } from '@/lib/constants';
 import { translations } from '@/lib/localization';
+import { useAuth } from '@/hooks/useAuth';
 
 interface FundingRecord {
   id: string;
@@ -24,6 +25,22 @@ interface SectorComparisonProps {
   isLoading?: boolean;
   selectedLanguage?: LanguageCode;
 }
+
+// Sample data for demo mode
+const DEMO_FUNDING_DATA: FundingRecord[] = [
+  { id: '1', startup_name: 'PayTech Pro', funding_amount: 25000000, funding_round: 'Series A', sector: 'FinTech', investor_name: 'Sequoia', location: 'Bangalore', funding_date: '2024-01-15' },
+  { id: '2', startup_name: 'HealthPlus', funding_amount: 18000000, funding_round: 'Series B', sector: 'HealthTech', investor_name: 'Accel', location: 'Mumbai', funding_date: '2024-02-10' },
+  { id: '3', startup_name: 'LearnNow', funding_amount: 12000000, funding_round: 'Series A', sector: 'EdTech', investor_name: 'Tiger Global', location: 'Delhi', funding_date: '2024-03-05' },
+  { id: '4', startup_name: 'QuickShop', funding_amount: 35000000, funding_round: 'Series C', sector: 'E-commerce', investor_name: 'SoftBank', location: 'Bangalore', funding_date: '2024-04-20' },
+  { id: '5', startup_name: 'CloudWorks', funding_amount: 22000000, funding_round: 'Series B', sector: 'SaaS', investor_name: 'Bessemer', location: 'Hyderabad', funding_date: '2024-05-12' },
+  { id: '6', startup_name: 'FarmFresh', funding_amount: 8000000, funding_round: 'Seed', sector: 'AgriTech', investor_name: 'Omnivore', location: 'Pune', funding_date: '2024-06-08' },
+  { id: '7', startup_name: 'GreenEnergy', funding_amount: 30000000, funding_round: 'Series B', sector: 'CleanTech', investor_name: 'Breakthrough', location: 'Chennai', funding_date: '2024-07-15' },
+  { id: '8', startup_name: 'AIVision', funding_amount: 45000000, funding_round: 'Series C', sector: 'DeepTech/AI', investor_name: 'Lightspeed', location: 'Bangalore', funding_date: '2024-08-22' },
+  { id: '9', startup_name: 'PayEasy', funding_amount: 15000000, funding_round: 'Series A', sector: 'FinTech', investor_name: 'Matrix', location: 'Mumbai', funding_date: '2024-09-10' },
+  { id: '10', startup_name: 'MediCare', funding_amount: 28000000, funding_round: 'Series B', sector: 'HealthTech', investor_name: 'GV', location: 'Delhi', funding_date: '2024-10-05' },
+  { id: '11', startup_name: 'SkillUp', funding_amount: 20000000, funding_round: 'Series B', sector: 'EdTech', investor_name: 'Owl Ventures', location: 'Bangalore', funding_date: '2024-11-18' },
+  { id: '12', startup_name: 'FastCart', funding_amount: 40000000, funding_round: 'Series C', sector: 'E-commerce', investor_name: 'Prosus', location: 'Mumbai', funding_date: '2024-12-01' },
+];
 
 // Distinct color palette for sector comparison - vibrant and easily distinguishable
 const SECTOR_COLORS: Record<string, string> = {
@@ -64,23 +81,32 @@ const getSectorColor = (sector: string, index: number): string => {
 export const SectorComparison = ({ data = [], isLoading, selectedLanguage = 'en' }: SectorComparisonProps) => {
   const [selectedSectors, setSelectedSectors] = useState<string[]>([]);
   const t = translations[selectedLanguage];
+  const { isDemo } = useAuth();
+
+  // Use demo data if in demo mode and no real data is available
+  const effectiveData = useMemo(() => {
+    if (isDemo && data.length === 0) {
+      return DEMO_FUNDING_DATA;
+    }
+    return data;
+  }, [data, isDemo]);
 
   const availableSectors = useMemo(() => {
     const sectors = new Set<string>();
-    data.forEach(record => {
+    effectiveData.forEach(record => {
       if (record.sector) sectors.add(record.sector);
     });
     const result = Array.from(sectors).sort();
-    console.log('SectorComparison - data length:', data.length, 'available sectors:', result);
+    console.log('SectorComparison - data length:', effectiveData.length, 'available sectors:', result);
     return result;
-  }, [data]);
+  }, [effectiveData]);
 
   const comparisonData = useMemo(() => {
     if (selectedSectors.length === 0) return { monthly: [], summary: [] };
 
     const monthlyMap = new Map<string, Record<string, number>>();
     
-    data.forEach(record => {
+    effectiveData.forEach(record => {
       if (!record.sector || !selectedSectors.includes(record.sector)) return;
       if (!record.funding_date) return;
       
@@ -109,7 +135,7 @@ export const SectorComparison = ({ data = [], isLoading, selectedLanguage = 'en'
       });
 
     const summary = selectedSectors.map(sector => {
-      const sectorData = data.filter(d => d.sector === sector);
+      const sectorData = effectiveData.filter(d => d.sector === sector);
       const totalFunding = sectorData.reduce((sum, d) => sum + (d.funding_amount || 0), 0);
       const dealCount = sectorData.length;
       const avgDealSize = dealCount > 0 ? totalFunding / dealCount : 0;
@@ -126,7 +152,7 @@ export const SectorComparison = ({ data = [], isLoading, selectedLanguage = 'en'
     });
 
     return { monthly, summary };
-  }, [data, selectedSectors]);
+  }, [effectiveData, selectedSectors]);
 
   const toggleSector = (sector: string, checked: boolean | 'indeterminate') => {
     if (checked === 'indeterminate') return;
