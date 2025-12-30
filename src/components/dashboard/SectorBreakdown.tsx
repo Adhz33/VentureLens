@@ -84,7 +84,7 @@ export const SectorBreakdown = ({ data, isLoading, selectedLanguage = 'en' }: Se
 
   return (
     <>
-      <div className="bg-card rounded-2xl p-6 border border-border opacity-0 animate-fade-in" style={{ animationDelay: '500ms', animationFillMode: 'forwards' }}>
+      <div className="bg-card rounded-2xl p-4 sm:p-6 border border-border opacity-0 animate-fade-in overflow-hidden" style={{ animationDelay: '500ms', animationFillMode: 'forwards' }}>
         {/* Header */}
         <div className="flex items-start justify-between mb-6">
           <div>
@@ -113,9 +113,9 @@ export const SectorBreakdown = ({ data, isLoading, selectedLanguage = 'en' }: Se
             <Loader2 className="w-8 h-8 animate-spin text-primary" />
           </div>
         ) : (
-          <div className="flex flex-col gap-6 md:flex-row md:items-center md:gap-8">
+          <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:gap-6">
             {/* Donut Chart with Center Label */}
-            <div className="relative w-full max-w-[220px] h-[220px] flex-shrink-0 self-center md:self-auto">
+            <div className="relative w-[180px] h-[180px] sm:w-[200px] sm:h-[200px] lg:w-[220px] lg:h-[220px] flex-shrink-0 mx-auto lg:mx-0">
               <ResponsiveContainer width="100%" height="100%">
                 <PieChart>
                   <Pie
@@ -172,7 +172,7 @@ export const SectorBreakdown = ({ data, isLoading, selectedLanguage = 'en' }: Se
             </div>
             
             {/* Legend with hover effects */}
-            <div className="flex-1 space-y-2">
+            <div className="flex-1 space-y-1 sm:space-y-2 min-w-0 overflow-hidden">
               {chartData.map((item) => {
                 const percentage = ((item.value / totalValue) * 100).toFixed(1);
                 const isHovered = hoveredSector === item.name;
@@ -180,7 +180,7 @@ export const SectorBreakdown = ({ data, isLoading, selectedLanguage = 'en' }: Se
                 return (
                   <div 
                     key={item.name} 
-                    className={`flex items-center gap-3 cursor-pointer rounded-lg py-2 px-3 transition-all duration-200 w-full overflow-hidden ${
+                    className={`flex items-center gap-2 sm:gap-3 cursor-pointer rounded-lg py-1.5 sm:py-2 px-2 sm:px-3 transition-all duration-200 w-full overflow-hidden ${
                       isHovered ? 'bg-secondary scale-[1.02]' : 'hover:bg-secondary/50'
                     } ${hoveredSector && !isHovered ? 'opacity-50' : 'opacity-100'}`}
                     onClick={() => handleSectorClick(item)}
