@@ -1,7 +1,9 @@
 import { useState } from 'react';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Cell } from 'recharts';
-import { TrendingUp, TrendingDown, Minus, Loader2 } from 'lucide-react';
+import { Loader2 } from 'lucide-react';
 import { SectorDrilldown } from './SectorDrilldown';
+import { LanguageCode } from '@/lib/constants';
+import { translations } from '@/lib/localization';
 
 interface SectorData {
   name: string;
@@ -14,6 +16,7 @@ interface SectorData {
 interface SectorAnalysisProps {
   data?: SectorData[];
   isLoading?: boolean;
+  selectedLanguage?: LanguageCode;
 }
 
 const fallbackData: SectorData[] = [
@@ -25,8 +28,9 @@ const fallbackData: SectorData[] = [
   { name: 'CleanTech', deals: 45, value: 900, startups: [], color: 'hsl(172, 66%, 50%)' },
 ];
 
-export const SectorAnalysis = ({ data, isLoading }: SectorAnalysisProps) => {
+export const SectorAnalysis = ({ data, isLoading, selectedLanguage = 'en' }: SectorAnalysisProps) => {
   const [selectedSector, setSelectedSector] = useState<SectorData | null>(null);
+  const t = translations[selectedLanguage];
   
   const sectorData = data && data.length > 0 ? data : fallbackData;
   const totalDeals = sectorData.reduce((sum, s) => sum + s.deals, 0);
@@ -40,9 +44,9 @@ export const SectorAnalysis = ({ data, isLoading }: SectorAnalysisProps) => {
     <>
       <div className="glass rounded-xl p-6 opacity-0 animate-fade-in" style={{ animationDelay: '550ms', animationFillMode: 'forwards' }}>
         <div className="mb-6">
-          <h3 className="font-display font-semibold text-lg text-foreground">Sector Analysis</h3>
+          <h3 className="font-display font-semibold text-lg text-foreground">{t.sectorAnalysis}</h3>
           <p className="text-sm text-muted-foreground">
-            {totalDeals} deals · ${(totalAmount / 1000).toFixed(1)}B total
+            {totalDeals} {t.deals} · ${(totalAmount / 1000).toFixed(1)}B {t.totalFunding.toLowerCase()}
           </p>
         </div>
 
@@ -84,7 +88,7 @@ export const SectorAnalysis = ({ data, isLoading }: SectorAnalysisProps) => {
                       border: '1px solid hsl(222, 30%, 18%)',
                       borderRadius: '12px',
                     }}
-                    formatter={(value: number) => [`$${value.toFixed(1)}M`, 'Funding']}
+                    formatter={(value: number) => [`$${value.toFixed(1)}M`, t.totalFunding]}
                   />
                   <Bar 
                     dataKey="value" 
@@ -119,7 +123,7 @@ export const SectorAnalysis = ({ data, isLoading }: SectorAnalysisProps) => {
                     />
                     <div>
                       <p className="text-sm font-medium text-foreground">{sector.name}</p>
-                      <p className="text-xs text-muted-foreground">{sector.deals} deals</p>
+                      <p className="text-xs text-muted-foreground">{sector.deals} {t.deals}</p>
                     </div>
                   </div>
                   <div className="text-right">

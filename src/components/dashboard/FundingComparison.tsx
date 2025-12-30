@@ -1,6 +1,8 @@
 import { useState } from 'react';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from 'recharts';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { LanguageCode } from '@/lib/constants';
+import { translations } from '@/lib/localization';
 
 const weeklyData = [
   { period: 'Week 1', current: 1200, previous: 980 },
@@ -25,8 +27,13 @@ const quarterlyData = [
   { period: 'Q4', current: 21200, previous: 17800 },
 ];
 
-export const FundingComparison = () => {
+interface FundingComparisonProps {
+  selectedLanguage?: LanguageCode;
+}
+
+export const FundingComparison = ({ selectedLanguage = 'en' }: FundingComparisonProps) => {
   const [period, setPeriod] = useState('monthly');
+  const t = translations[selectedLanguage];
 
   const getData = () => {
     switch (period) {
@@ -38,7 +45,7 @@ export const FundingComparison = () => {
 
   const getLabels = () => {
     switch (period) {
-      case 'weekly': return { current: 'This Week', previous: 'Last Week' };
+      case 'weekly': return { current: t.thisWeek, previous: t.lastWeek };
       case 'quarterly': return { current: '2024', previous: '2023' };
       default: return { current: '2024', previous: '2023' };
     }
@@ -55,18 +62,18 @@ export const FundingComparison = () => {
     <div className="glass rounded-xl p-6 opacity-0 animate-fade-in" style={{ animationDelay: '450ms', animationFillMode: 'forwards' }}>
       <div className="flex items-center justify-between mb-6">
         <div>
-          <h3 className="font-display font-semibold text-lg text-foreground">Funding Comparison</h3>
+          <h3 className="font-display font-semibold text-lg text-foreground">{t.fundingComparison}</h3>
           <p className="text-sm text-muted-foreground">
             {changePercent.startsWith('-') ? '' : '+'}
-            {changePercent}% vs previous period
+            {changePercent}% {t.vsPreviousPeriod}
           </p>
         </div>
         
         <Tabs value={period} onValueChange={setPeriod} className="w-auto">
           <TabsList className="bg-background/50">
-            <TabsTrigger value="weekly" className="text-xs px-3">Weekly</TabsTrigger>
-            <TabsTrigger value="monthly" className="text-xs px-3">Monthly</TabsTrigger>
-            <TabsTrigger value="quarterly" className="text-xs px-3">Quarterly</TabsTrigger>
+            <TabsTrigger value="weekly" className="text-xs px-3">{t.weekly}</TabsTrigger>
+            <TabsTrigger value="monthly" className="text-xs px-3">{t.monthly}</TabsTrigger>
+            <TabsTrigger value="quarterly" className="text-xs px-3">{t.quarterly}</TabsTrigger>
           </TabsList>
         </Tabs>
       </div>
