@@ -272,7 +272,7 @@ const Index = () => {
                 <div className="w-8 h-8 rounded-lg bg-primary/20 flex items-center justify-center">
                   <TrendingUp className="w-4 h-4 text-primary" />
                 </div>
-                <span className="font-display font-semibold text-foreground">VentureLens</span>
+                <span className="font-display font-semibold text-foreground">Venture<span className="text-brand-orange">Lens</span></span>
               </div>
               
               <p className="text-sm text-muted-foreground text-center">
@@ -280,7 +280,7 @@ const Index = () => {
               </p>
               
               <p className="text-sm text-muted-foreground">
-                © 2024 VentureLens by InVento.
+                © 2024 Venture<span className="text-brand-orange">Lens</span> by InVento.
               </p>
             </div>
           </div>

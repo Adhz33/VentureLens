@@ -61,7 +61,7 @@ export const AppSidebar = ({ selectedLanguage, onLanguageChange, onToggleKnowled
           {!isCollapsed && (
             <div>
               <h1 className="font-display font-bold text-lg text-foreground">
-                VentureLens
+                Venture<span className="text-brand-orange">Lens</span>
               </h1>
               <p className="text-[10px] text-muted-foreground uppercase tracking-wider">
                 {t.startupIntelligence}
