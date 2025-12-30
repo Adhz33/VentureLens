@@ -3,6 +3,7 @@ import { Database, Plus, Upload, Search, FileText, X, Loader2, Trash2, CheckCirc
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
+import { Progress } from '@/components/ui/progress';
 import { cn } from '@/lib/utils';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
@@ -62,6 +63,8 @@ export const KnowledgeBasePanel = ({
   const [documents, setDocuments] = useState<Document[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isUploading, setIsUploading] = useState(false);
+  const [uploadProgress, setUploadProgress] = useState(0);
+  const [processingDocId, setProcessingDocId] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const { toast } = useToast();
   const { isDemo } = useAuth();
@@ -95,11 +98,59 @@ export const KnowledgeBasePanel = ({
     }
   }, [isOpen]);
 
+  // Real-time subscription for document status updates
+  useEffect(() => {
+    const channel = supabase
+      .channel('knowledge-docs-changes')
+      .on(
+        'postgres_changes',
+        {
+          event: 'UPDATE',
+          schema: 'public',
+          table: 'knowledge_documents'
+        },
+        (payload) => {
+          const updated = payload.new as Document;
+          setDocuments(prev => prev.map(doc => 
+            doc.id === updated.id ? updated : doc
+          ));
+          
+          // Clear processing indicator when done
+          if (updated.id === processingDocId && updated.status === 'ready') {
+            setProcessingDocId(null);
+            toast({
+              title: t.documentReady || 'Document Ready',
+              description: `${updated.file_name} processed with ${updated.chunks_count} chunks`,
+            });
+          }
+        }
+      )
+      .on(
+        'postgres_changes',
+        {
+          event: 'INSERT',
+          schema: 'public',
+          table: 'knowledge_documents'
+        },
+        (payload) => {
+          const newDoc = payload.new as Document;
+          setDocuments(prev => [newDoc, ...prev]);
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [processingDocId, t]);
+
   const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (!file) return;
 
     setIsUploading(true);
+    setUploadProgress(0);
+    
     try {
       // Sanitize filename: replace special characters and spaces
       const sanitizedName = file.name
@@ -110,10 +161,19 @@ export const KnowledgeBasePanel = ({
         .replace(/_+/g, '_'); // Collapse multiple underscores
       
       const fileName = `${Date.now()}-${sanitizedName}`;
+      
+      // Simulate upload progress (Supabase doesn't provide native progress)
+      const progressInterval = setInterval(() => {
+        setUploadProgress(prev => Math.min(prev + 10, 90));
+      }, 100);
+      
       const { data: uploadData, error: uploadError } = await supabase
         .storage
         .from('knowledge-base')
         .upload(fileName, file);
+
+      clearInterval(progressInterval);
+      setUploadProgress(100);
 
       if (uploadError) throw uploadError;
 
@@ -133,26 +193,18 @@ export const KnowledgeBasePanel = ({
 
       if (docError) throw docError;
 
+      // Track this document for processing status
+      setProcessingDocId(docData.id);
+
       toast({
         title: t.documentUploaded,
         description: t.processingForRag,
       });
 
-      // Trigger document processing
-      const { error: processError } = await supabase.functions.invoke('process-document', {
+      // Trigger document processing (runs in background)
+      supabase.functions.invoke('process-document', {
         body: { documentId: docData.id, filePath: uploadData.path }
-      });
-
-      if (processError) {
-        console.error('Processing error:', processError);
-        toast({
-          title: t.processingStarted,
-          description: t.documentReady,
-        });
-      }
-
-      // Refresh documents list
-      fetchDocuments();
+      }).catch(err => console.error('Processing error:', err));
 
     } catch (error) {
       console.error('Upload error:', error);
@@ -163,6 +215,7 @@ export const KnowledgeBasePanel = ({
       });
     } finally {
       setIsUploading(false);
+      setUploadProgress(0);
       if (fileInputRef.current) {
         fileInputRef.current.value = '';
       }
@@ -309,6 +362,25 @@ export const KnowledgeBasePanel = ({
               )}
               {isUploading ? t.uploading : t.uploadDocument}
             </Button>
+            
+            {/* Upload Progress */}
+            {isUploading && (
+              <div className="space-y-2">
+                <div className="flex items-center justify-between text-xs text-muted-foreground">
+                  <span>Uploading...</span>
+                  <span>{uploadProgress}%</span>
+                </div>
+                <Progress value={uploadProgress} className="h-2" />
+              </div>
+            )}
+            
+            {/* Processing Indicator */}
+            {processingDocId && !isUploading && (
+              <div className="flex items-center gap-2 p-2 rounded-lg bg-primary/10 border border-primary/20">
+                <Loader2 className="w-4 h-4 animate-spin text-primary" />
+                <span className="text-xs text-muted-foreground">Processing document...</span>
+              </div>
+            )}
           </div>
 
           {/* Search */}
