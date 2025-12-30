@@ -27,7 +27,7 @@ export const Header = ({ selectedLanguage, onLanguageChange }: HeaderProps) => {
             </div>
             <div>
               <h1 className="font-display font-bold text-lg text-foreground">
-                VentureLens
+                Venture<span className="text-brand-orange">Lens</span>
               </h1>
               <p className="text-[10px] text-muted-foreground -mt-0.5">
                 Startup Intelligence
