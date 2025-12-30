@@ -5,6 +5,8 @@ import { LoadingSpinner } from '@/components/ui/loading-spinner';
 import { LanguageCode, SAMPLE_QUERIES } from '@/lib/constants';
 import { getTranslation, SearchMode } from '@/lib/localization';
 import { useToast } from '@/hooks/use-toast';
+import { useAuth } from '@/hooks/useAuth';
+import { supabase } from '@/integrations/supabase/client';
 import ReactMarkdown from 'react-markdown';
 
 interface Message {
@@ -53,6 +55,7 @@ export const QueryInterface = ({ language }: QueryInterfaceProps) => {
   const [searchMode, setSearchMode] = useState<SearchMode>('combined');
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const { toast } = useToast();
+  const { session } = useAuth();
 
   const t = getTranslation(language);
   const sampleQueries = SAMPLE_QUERIES[language as keyof typeof SAMPLE_QUERIES] || SAMPLE_QUERIES.en;
@@ -80,7 +83,7 @@ export const QueryInterface = ({ language }: QueryInterfaceProps) => {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${SUPABASE_ANON_KEY}`,
+          'Authorization': `Bearer ${session?.access_token || SUPABASE_ANON_KEY}`,
           'apikey': SUPABASE_ANON_KEY,
         },
         body: JSON.stringify({ 
@@ -138,7 +141,7 @@ export const QueryInterface = ({ language }: QueryInterfaceProps) => {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'Authorization': `Bearer ${SUPABASE_ANON_KEY}`,
+        'Authorization': `Bearer ${session?.access_token || SUPABASE_ANON_KEY}`,
         'apikey': SUPABASE_ANON_KEY,
       },
       body: JSON.stringify({ 
