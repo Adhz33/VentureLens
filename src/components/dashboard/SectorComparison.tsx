@@ -25,15 +25,40 @@ interface SectorComparisonProps {
   selectedLanguage?: LanguageCode;
 }
 
+// Distinct color palette for sector comparison - vibrant and easily distinguishable
 const SECTOR_COLORS: Record<string, string> = {
-  'Fintech': 'hsl(32, 95%, 55%)',
-  'E-commerce': 'hsl(199, 89%, 48%)',
-  'Healthtech': 'hsl(142, 76%, 36%)',
-  'Edtech': 'hsl(280, 65%, 60%)',
-  'Agritech': 'hsl(38, 92%, 50%)',
-  'Logistics': 'hsl(172, 66%, 50%)',
-  'SaaS': 'hsl(340, 75%, 55%)',
-  'Others': 'hsl(215, 20%, 55%)',
+  'FinTech': '#F97316',        // Orange
+  'Fintech': '#F97316',        // Orange (alt case)
+  'E-commerce': '#3B82F6',     // Blue
+  'HealthTech': '#10B981',     // Emerald
+  'Healthtech': '#10B981',     // Emerald (alt case)
+  'EdTech': '#8B5CF6',         // Violet
+  'Edtech': '#8B5CF6',         // Violet (alt case)
+  'AgriTech': '#EAB308',       // Yellow
+  'Agritech': '#EAB308',       // Yellow (alt case)
+  'Logistics': '#14B8A6',      // Teal
+  'SaaS': '#EC4899',           // Pink
+  'Enterprise/SaaS': '#EC4899', // Pink
+  'CleanTech': '#22C55E',      // Green
+  'DeepTech/AI': '#6366F1',    // Indigo
+  'DeepTech': '#6366F1',       // Indigo (alt)
+  'AI/ML': '#A855F7',          // Purple
+  'Consumer': '#F43F5E',       // Rose
+  'Gaming': '#06B6D4',         // Cyan
+  'Media': '#FB923C',          // Light Orange
+  'Real Estate': '#84CC16',    // Lime
+  'Travel': '#0EA5E9',         // Sky
+  'Others': '#64748B',         // Slate
+};
+
+// Fallback colors for sectors not in the predefined list
+const FALLBACK_COLORS = [
+  '#F97316', '#3B82F6', '#10B981', '#8B5CF6', '#EAB308',
+  '#14B8A6', '#EC4899', '#22C55E', '#6366F1', '#F43F5E',
+];
+
+const getSectorColor = (sector: string, index: number): string => {
+  return SECTOR_COLORS[sector] || FALLBACK_COLORS[index % FALLBACK_COLORS.length];
 };
 
 export const SectorComparison = ({ data = [], isLoading, selectedLanguage = 'en' }: SectorComparisonProps) => {
@@ -89,12 +114,14 @@ export const SectorComparison = ({ data = [], isLoading, selectedLanguage = 'en'
       const dealCount = sectorData.length;
       const avgDealSize = dealCount > 0 ? totalFunding / dealCount : 0;
       
+      const sectorIndex = selectedSectors.indexOf(sector);
+      
       return {
         sector,
         totalFunding: totalFunding / 1000000,
         dealCount,
         avgDealSize: avgDealSize / 1000000,
-        color: SECTOR_COLORS[sector] || 'hsl(215, 20%, 55%)',
+        color: getSectorColor(sector, sectorIndex),
       };
     });
 
@@ -146,8 +173,8 @@ export const SectorComparison = ({ data = [], isLoading, selectedLanguage = 'en'
               />
               <Label
                 htmlFor={`sector-${sector}`}
-                className="text-sm cursor-pointer"
-                style={{ color: SECTOR_COLORS[sector] || 'hsl(215, 20%, 55%)' }}
+                className="text-sm cursor-pointer font-medium"
+                style={{ color: getSectorColor(sector, availableSectors.indexOf(sector)) }}
               >
                 {sector}
               </Label>
@@ -182,14 +209,15 @@ export const SectorComparison = ({ data = [], isLoading, selectedLanguage = 'en'
                   formatter={(value: number) => [`$${value.toFixed(2)}M`, '']}
                 />
                 <Legend />
-                {selectedSectors.map(sector => (
+                  {selectedSectors.map((sector, index) => (
                   <Line
                     key={sector}
                     type="monotone"
                     dataKey={sector}
-                    stroke={SECTOR_COLORS[sector] || 'hsl(215, 20%, 55%)'}
-                    strokeWidth={2}
-                    dot={{ r: 4 }}
+                    stroke={getSectorColor(sector, index)}
+                    strokeWidth={3}
+                    dot={{ r: 5, fill: getSectorColor(sector, index), strokeWidth: 2, stroke: 'hsl(var(--background))' }}
+                    activeDot={{ r: 7, strokeWidth: 2, stroke: 'hsl(var(--background))' }}
                   />
                 ))}
               </LineChart>
