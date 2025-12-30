@@ -113,9 +113,9 @@ export const SectorBreakdown = ({ data, isLoading, selectedLanguage = 'en' }: Se
             <Loader2 className="w-8 h-8 animate-spin text-primary" />
           </div>
         ) : (
-          <div className="flex items-center gap-8">
+          <div className="flex flex-col gap-6 md:flex-row md:items-center md:gap-8">
             {/* Donut Chart with Center Label */}
-            <div className="relative w-[220px] h-[220px] flex-shrink-0">
+            <div className="relative w-full max-w-[220px] h-[220px] flex-shrink-0 self-center md:self-auto">
               <ResponsiveContainer width="100%" height="100%">
                 <PieChart>
                   <Pie
@@ -180,7 +180,7 @@ export const SectorBreakdown = ({ data, isLoading, selectedLanguage = 'en' }: Se
                 return (
                   <div 
                     key={item.name} 
-                    className={`flex items-center gap-3 cursor-pointer rounded-lg py-2 px-3 -mx-3 transition-all duration-200 ${
+                    className={`flex items-center gap-3 cursor-pointer rounded-lg py-2 px-3 transition-all duration-200 w-full overflow-hidden ${
                       isHovered ? 'bg-secondary scale-[1.02]' : 'hover:bg-secondary/50'
                     } ${hoveredSector && !isHovered ? 'opacity-50' : 'opacity-100'}`}
                     onClick={() => handleSectorClick(item)}
