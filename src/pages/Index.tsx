@@ -104,8 +104,9 @@ const Index = () => {
       />
       
       <main className={cn(
-        "flex-1 ml-64 transition-all duration-300",
-        isKnowledgeBaseOpen && "mr-80"
+        "flex-1 transition-all duration-300",
+        "ml-0 md:ml-20 lg:ml-64", // Responsive sidebar margin
+        isKnowledgeBaseOpen && "lg:mr-80"
       )}>
         <KnowledgeBasePanel 
           isOpen={isKnowledgeBaseOpen} 
@@ -113,7 +114,7 @@ const Index = () => {
           selectedLanguage={selectedLanguage}
         />
         {/* Dashboard Section */}
-        <section id="dashboard" className="py-12 bg-background relative">
+        <section id="dashboard" className="py-8 md:py-12 bg-background relative pt-20 md:pt-12">
           <div className="absolute inset-0 bg-grid-pattern bg-grid opacity-20" />
           
           <div className="container mx-auto px-4 relative z-10">
