@@ -1,7 +1,9 @@
-import { Database, Globe, Menu, X } from 'lucide-react';
+import { Database, Globe, Menu, X, LogOut } from 'lucide-react';
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { SUPPORTED_LANGUAGES, LanguageCode } from '@/lib/constants';
+import { useAuth } from '@/hooks/useAuth';
+import { toast } from 'sonner';
 import logo from '@/assets/logo.png';
 
 interface HeaderProps {
@@ -12,6 +14,12 @@ interface HeaderProps {
 export const Header = ({ selectedLanguage, onLanguageChange }: HeaderProps) => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isLangOpen, setIsLangOpen] = useState(false);
+  const { user, signOut } = useAuth();
+
+  const handleSignOut = async () => {
+    await signOut();
+    toast.success('Signed out successfully');
+  };
 
   const currentLang = SUPPORTED_LANGUAGES.find(l => l.code === selectedLanguage);
 
@@ -96,6 +104,18 @@ export const Header = ({ selectedLanguage, onLanguageChange }: HeaderProps) => {
               Ingest Data
             </Button>
 
+            {user && (
+              <Button 
+                variant="ghost" 
+                size="sm" 
+                className="hidden sm:flex gap-2 text-muted-foreground hover:text-destructive"
+                onClick={handleSignOut}
+              >
+                <LogOut className="w-4 h-4" />
+                Sign Out
+              </Button>
+            )}
+
             {/* Mobile Menu Toggle */}
             <Button
               variant="ghost"
@@ -127,6 +147,15 @@ export const Header = ({ selectedLanguage, onLanguageChange }: HeaderProps) => {
               <a href="#sources" className="px-4 py-2 text-sm text-muted-foreground hover:text-foreground hover:bg-secondary/50 rounded-lg transition-colors">
                 Data Sources
               </a>
+              {user && (
+                <button 
+                  onClick={handleSignOut}
+                  className="px-4 py-2 text-sm text-destructive hover:bg-destructive/10 rounded-lg transition-colors flex items-center gap-2"
+                >
+                  <LogOut className="w-4 h-4" />
+                  Sign Out
+                </button>
+              )}
             </div>
           </nav>
         )}
