@@ -1,8 +1,8 @@
 import { useState, useRef, useEffect, useCallback } from 'react';
-import { Send, Loader2, Sparkles, BookOpen, ChevronRight, FileText, Globe, Search } from 'lucide-react';
+import { Send, Loader2, Sparkles, ChevronRight, FileText, Globe, Search, FileSearch, Layers } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Checkbox } from '@/components/ui/checkbox';
 import { LanguageCode, SAMPLE_QUERIES } from '@/lib/constants';
+import { getTranslation, SearchMode } from '@/lib/localization';
 import { useToast } from '@/hooks/use-toast';
 import ReactMarkdown from 'react-markdown';
 
@@ -49,9 +49,11 @@ export const QueryInterface = ({ language }: QueryInterfaceProps) => {
   const [isLoading, setIsLoading] = useState(false);
   const [streamingContent, setStreamingContent] = useState('');
   const [isWebSearching, setIsWebSearching] = useState(false);
+  const [searchMode, setSearchMode] = useState<SearchMode>('combined');
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const { toast } = useToast();
 
+  const t = getTranslation(language);
   const sampleQueries = SAMPLE_QUERIES[language as keyof typeof SAMPLE_QUERIES] || SAMPLE_QUERIES.en;
 
   const scrollToBottom = () => {
@@ -69,7 +71,7 @@ export const QueryInterface = ({ language }: QueryInterfaceProps) => {
   };
 
   // Perform web search using Perplexity
-  const performWebSearch = async (searchQuery: string, messageId: string) => {
+  const performWebSearch = async (searchQuery: string, messageId?: string) => {
     setIsWebSearching(true);
     
     try {
@@ -101,26 +103,134 @@ export const QueryInterface = ({ language }: QueryInterfaceProps) => {
         sources: data.citations || [],
       };
 
-      // Remove the web search prompt from the previous message and add the new one
-      setMessages(prev => prev.map(m => 
-        m.id === messageId ? { ...m, showWebSearchPrompt: false } : m
-      ).concat(webSearchMessage));
+      if (messageId) {
+        // Remove the web search prompt from the previous message and add the new one
+        setMessages(prev => prev.map(m => 
+          m.id === messageId ? { ...m, showWebSearchPrompt: false } : m
+        ).concat(webSearchMessage));
+      } else {
+        setMessages(prev => [...prev, webSearchMessage]);
+      }
 
       toast({
-        title: 'Web Search Complete',
-        description: 'Found information from the web!',
+        title: t.webSearchComplete,
+        description: t.foundInfoFromWeb,
       });
 
+      return data;
     } catch (error) {
       console.error('Web search error:', error);
       toast({
-        title: 'Web Search Failed',
-        description: error instanceof Error ? error.message : 'Could not perform web search.',
+        title: t.errorTitle,
+        description: error instanceof Error ? error.message : t.webSearchFailed,
         variant: 'destructive',
       });
+      return null;
     } finally {
       setIsWebSearching(false);
     }
+  };
+
+  // Perform RAG query on documents
+  const performDocumentSearch = async (searchQuery: string): Promise<{ content: string; documentSources: any[]; hasMissingInfo: boolean }> => {
+    const response = await fetch(`${SUPABASE_URL}/functions/v1/rag-query`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${SUPABASE_ANON_KEY}`,
+        'apikey': SUPABASE_ANON_KEY,
+      },
+      body: JSON.stringify({ 
+        query: searchQuery,
+        language: language,
+        conversationHistory: messages.map(m => ({ role: m.role, content: m.content })),
+        useKnowledgeBase: true
+      }),
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      if (response.status === 429) {
+        throw new Error(t.rateLimitError);
+      }
+      if (response.status === 402) {
+        throw new Error(t.creditsExhausted);
+      }
+      throw new Error(errorData.error || 'Failed to get response');
+    }
+
+    // Parse document sources from header
+    let documentSources: Array<{ name: string; category: string }> = [];
+    try {
+      const sourcesHeader = response.headers.get('X-Document-Sources');
+      if (sourcesHeader) {
+        documentSources = JSON.parse(sourcesHeader);
+      }
+    } catch (e) {
+      console.log('No document sources in header');
+    }
+
+    const reader = response.body?.getReader();
+    if (!reader) throw new Error('No response body');
+
+    const decoder = new TextDecoder();
+    let fullContent = '';
+    let textBuffer = '';
+
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) break;
+
+      textBuffer += decoder.decode(value, { stream: true });
+
+      let newlineIndex: number;
+      while ((newlineIndex = textBuffer.indexOf('\n')) !== -1) {
+        let line = textBuffer.slice(0, newlineIndex);
+        textBuffer = textBuffer.slice(newlineIndex + 1);
+
+        if (line.endsWith('\r')) line = line.slice(0, -1);
+        if (line.startsWith(':') || line.trim() === '') continue;
+        if (!line.startsWith('data: ')) continue;
+
+        const jsonStr = line.slice(6).trim();
+        if (jsonStr === '[DONE]') break;
+
+        try {
+          const parsed = JSON.parse(jsonStr);
+          const content = parsed.choices?.[0]?.delta?.content as string | undefined;
+          if (content) {
+            fullContent += content;
+            setStreamingContent(fullContent);
+          }
+        } catch {
+          textBuffer = line + '\n' + textBuffer;
+          break;
+        }
+      }
+    }
+
+    // Final flush
+    if (textBuffer.trim()) {
+      for (let raw of textBuffer.split('\n')) {
+        if (!raw) continue;
+        if (raw.endsWith('\r')) raw = raw.slice(0, -1);
+        if (raw.startsWith(':') || raw.trim() === '') continue;
+        if (!raw.startsWith('data: ')) continue;
+        const jsonStr = raw.slice(6).trim();
+        if (jsonStr === '[DONE]') continue;
+        try {
+          const parsed = JSON.parse(jsonStr);
+          const content = parsed.choices?.[0]?.delta?.content as string | undefined;
+          if (content) {
+            fullContent += content;
+          }
+        } catch { /* ignore */ }
+      }
+    }
+
+    const hasMissingInfo = checkForMissingInfo(fullContent);
+
+    return { content: fullContent, documentSources, hasMissingInfo };
   };
 
   const handleSubmit = useCallback(async (e?: React.FormEvent) => {
@@ -140,130 +250,57 @@ export const QueryInterface = ({ language }: QueryInterfaceProps) => {
     setStreamingContent('');
 
     try {
-      const response = await fetch(`${SUPABASE_URL}/functions/v1/rag-query`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${SUPABASE_ANON_KEY}`,
-          'apikey': SUPABASE_ANON_KEY,
-        },
-        body: JSON.stringify({ 
-          query: currentQuery,
-          language: language,
-          conversationHistory: messages.map(m => ({ role: m.role, content: m.content })),
-          useKnowledgeBase: true
-        }),
-      });
+      if (searchMode === 'web') {
+        // Web-only mode
+        setIsWebSearching(true);
+        await performWebSearch(currentQuery);
+        setIsWebSearching(false);
+      } else if (searchMode === 'documents') {
+        // Documents-only mode
+        const result = await performDocumentSearch(currentQuery);
+        const messageId = (Date.now() + 1).toString();
+        
+        const assistantMessage: Message = {
+          id: messageId,
+          role: 'assistant',
+          content: result.content || 'I apologize, but I could not generate a response. Please try again.',
+          documentSources: result.documentSources.length > 0 ? result.documentSources : undefined,
+          // In documents-only mode, show web search prompt if missing info
+          showWebSearchPrompt: result.hasMissingInfo,
+          originalQuery: result.hasMissingInfo ? currentQuery : undefined,
+        };
 
-      if (!response.ok) {
-        const errorData = await response.json().catch(() => ({}));
-        if (response.status === 429) {
-          throw new Error('Rate limit exceeded. Please try again in a moment.');
-        }
-        if (response.status === 402) {
-          throw new Error('AI credits exhausted. Please add credits to continue.');
-        }
-        throw new Error(errorData.error || 'Failed to get response');
+        setMessages((prev) => [...prev, assistantMessage]);
+        setStreamingContent('');
+      } else {
+        // Combined mode: documents first, then web if needed
+        const result = await performDocumentSearch(currentQuery);
+        const messageId = (Date.now() + 1).toString();
+        
+        const assistantMessage: Message = {
+          id: messageId,
+          role: 'assistant',
+          content: result.content || 'I apologize, but I could not generate a response. Please try again.',
+          documentSources: result.documentSources.length > 0 ? result.documentSources : undefined,
+          showWebSearchPrompt: result.hasMissingInfo,
+          originalQuery: result.hasMissingInfo ? currentQuery : undefined,
+        };
+
+        setMessages((prev) => [...prev, assistantMessage]);
+        setStreamingContent('');
       }
-
-      // Parse document sources from header
-      let documentSources: Array<{ name: string; category: string }> = [];
-      try {
-        const sourcesHeader = response.headers.get('X-Document-Sources');
-        if (sourcesHeader) {
-          documentSources = JSON.parse(sourcesHeader);
-        }
-      } catch (e) {
-        console.log('No document sources in header');
-      }
-
-      const reader = response.body?.getReader();
-      if (!reader) throw new Error('No response body');
-
-      const decoder = new TextDecoder();
-      let fullContent = '';
-      let textBuffer = '';
-
-      while (true) {
-        const { done, value } = await reader.read();
-        if (done) break;
-
-        textBuffer += decoder.decode(value, { stream: true });
-
-        let newlineIndex: number;
-        while ((newlineIndex = textBuffer.indexOf('\n')) !== -1) {
-          let line = textBuffer.slice(0, newlineIndex);
-          textBuffer = textBuffer.slice(newlineIndex + 1);
-
-          if (line.endsWith('\r')) line = line.slice(0, -1);
-          if (line.startsWith(':') || line.trim() === '') continue;
-          if (!line.startsWith('data: ')) continue;
-
-          const jsonStr = line.slice(6).trim();
-          if (jsonStr === '[DONE]') break;
-
-          try {
-            const parsed = JSON.parse(jsonStr);
-            const content = parsed.choices?.[0]?.delta?.content as string | undefined;
-            if (content) {
-              fullContent += content;
-              setStreamingContent(fullContent);
-            }
-          } catch {
-            // Partial JSON, put back and wait for more data
-            textBuffer = line + '\n' + textBuffer;
-            break;
-          }
-        }
-      }
-
-      // Final flush
-      if (textBuffer.trim()) {
-        for (let raw of textBuffer.split('\n')) {
-          if (!raw) continue;
-          if (raw.endsWith('\r')) raw = raw.slice(0, -1);
-          if (raw.startsWith(':') || raw.trim() === '') continue;
-          if (!raw.startsWith('data: ')) continue;
-          const jsonStr = raw.slice(6).trim();
-          if (jsonStr === '[DONE]') continue;
-          try {
-            const parsed = JSON.parse(jsonStr);
-            const content = parsed.choices?.[0]?.delta?.content as string | undefined;
-            if (content) {
-              fullContent += content;
-            }
-          } catch { /* ignore */ }
-        }
-      }
-
-      // Check if the response indicates missing information
-      const hasMissingInfo = checkForMissingInfo(fullContent);
-      const messageId = (Date.now() + 1).toString();
-
-      const assistantMessage: Message = {
-        id: messageId,
-        role: 'assistant',
-        content: fullContent || 'I apologize, but I could not generate a response. Please try again.',
-        documentSources: documentSources.length > 0 ? documentSources : undefined,
-        showWebSearchPrompt: hasMissingInfo,
-        originalQuery: hasMissingInfo ? currentQuery : undefined,
-      };
-
-      setMessages((prev) => [...prev, assistantMessage]);
-      setStreamingContent('');
-
     } catch (error) {
       console.error('Query error:', error);
       toast({
-        title: 'Error',
-        description: error instanceof Error ? error.message : 'Failed to process your query. Please try again.',
+        title: t.errorTitle,
+        description: error instanceof Error ? error.message : t.failedToProcess,
         variant: 'destructive',
       });
       setStreamingContent('');
     } finally {
       setIsLoading(false);
     }
-  }, [query, isLoading, language, messages, toast]);
+  }, [query, isLoading, language, messages, toast, searchMode, t]);
 
   const handleSampleQuery = (sampleQuery: string) => {
     setQuery(sampleQuery);
@@ -274,20 +311,52 @@ export const QueryInterface = ({ language }: QueryInterfaceProps) => {
     setStreamingContent('');
   };
 
+  const searchModeOptions = [
+    { value: 'documents' as SearchMode, label: t.documentsOnly, icon: FileSearch, desc: t.documentsOnlyDesc },
+    { value: 'web' as SearchMode, label: t.webOnly, icon: Globe, desc: t.webOnlyDesc },
+    { value: 'combined' as SearchMode, label: t.combined, icon: Layers, desc: t.combinedDesc },
+  ];
+
   return (
     <section id="query" className="py-16">
       <div className="container mx-auto px-4">
         <div className="text-center mb-12">
           <h2 className="font-display font-bold text-3xl md:text-4xl text-foreground mb-4">
-            <span className="text-gradient">Intelligent</span> Query Interface
+            <span className="text-gradient">{t.intelligentQuery}</span> Query Interface
           </h2>
           <p className="text-muted-foreground max-w-2xl mx-auto">
-            Ask questions about startup funding in your preferred language. 
-            Get grounded insights backed by real data sources.
+            {t.queryDescription}
           </p>
         </div>
 
         <div className="max-w-4xl mx-auto">
+          {/* Search Mode Toggle */}
+          <div className="mb-4">
+            <label className="block text-sm font-medium text-muted-foreground mb-2">
+              {t.searchMode}
+            </label>
+            <div className="flex flex-wrap gap-2">
+              {searchModeOptions.map((option) => {
+                const Icon = option.icon;
+                return (
+                  <button
+                    key={option.value}
+                    onClick={() => setSearchMode(option.value)}
+                    className={`flex items-center gap-2 px-4 py-2 rounded-lg border transition-all ${
+                      searchMode === option.value
+                        ? 'bg-primary text-primary-foreground border-primary'
+                        : 'bg-secondary/50 text-muted-foreground border-border hover:bg-secondary hover:text-foreground'
+                    }`}
+                    title={option.desc}
+                  >
+                    <Icon className="w-4 h-4" />
+                    <span className="text-sm font-medium">{option.label}</span>
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+
           {/* Chat Container */}
           <div className="glass rounded-2xl overflow-hidden">
             {/* Messages Area */}
@@ -298,10 +367,10 @@ export const QueryInterface = ({ language }: QueryInterfaceProps) => {
                     <Sparkles className="w-8 h-8 text-primary" />
                   </div>
                   <h3 className="font-display font-semibold text-lg text-foreground mb-2">
-                    Start Exploring
+                    {t.startExploring}
                   </h3>
                   <p className="text-sm text-muted-foreground mb-6 max-w-md">
-                    Ask any question about startup funding, investors, or government policies
+                    {t.askAnyQuestion}
                   </p>
                   
                   {/* Sample Queries */}
@@ -347,10 +416,10 @@ export const QueryInterface = ({ language }: QueryInterfaceProps) => {
                               <Globe className="w-5 h-5 text-primary mt-0.5 flex-shrink-0" />
                               <div className="flex-1">
                                 <p className="text-sm font-medium text-foreground mb-2">
-                                  Documents don't have the specific information you asked for.
+                                  {t.documentsNoInfo}
                                 </p>
                                 <p className="text-xs text-muted-foreground mb-3">
-                                  Would you like to search the web for more up-to-date information?
+                                  {t.wouldYouLikeWebSearch}
                                 </p>
                                 <Button
                                   size="sm"
@@ -361,12 +430,12 @@ export const QueryInterface = ({ language }: QueryInterfaceProps) => {
                                   {isWebSearching ? (
                                     <>
                                       <Loader2 className="w-4 h-4 animate-spin" />
-                                      Searching...
+                                      {t.searching}
                                     </>
                                   ) : (
                                     <>
                                       <Search className="w-4 h-4" />
-                                      Search the Web
+                                      {t.searchTheWeb}
                                     </>
                                   )}
                                 </Button>
@@ -380,7 +449,7 @@ export const QueryInterface = ({ language }: QueryInterfaceProps) => {
                           <div className="mt-3 pt-3 border-t border-border/30">
                             <p className="text-xs text-muted-foreground mb-2 flex items-center gap-1">
                               <FileText className="w-3 h-3" />
-                              From Knowledge Base:
+                              {t.fromKnowledgeBase}
                             </p>
                             <div className="flex flex-wrap gap-2">
                               {message.documentSources.map((doc, idx) => (
@@ -400,7 +469,7 @@ export const QueryInterface = ({ language }: QueryInterfaceProps) => {
                           <div className="mt-3 pt-3 border-t border-border/30">
                             <p className="text-xs text-muted-foreground mb-2 flex items-center gap-1">
                               <Globe className="w-3 h-3" />
-                              Web Sources:
+                              {t.webSources}
                             </p>
                             <div className="flex flex-wrap gap-2">
                               {message.sources.map((source, idx) => (
@@ -439,18 +508,18 @@ export const QueryInterface = ({ language }: QueryInterfaceProps) => {
                       <div className="bg-secondary/70 rounded-2xl px-5 py-3">
                         <div className="flex items-center gap-2">
                           <Loader2 className="w-4 h-4 animate-spin text-primary" />
-                          <span className="text-sm text-muted-foreground">Searching the web...</span>
+                          <span className="text-sm text-muted-foreground">{t.searchingWeb}</span>
                         </div>
                       </div>
                     </div>
                   )}
                   
-                  {isLoading && !streamingContent && (
+                  {isLoading && !streamingContent && !isWebSearching && (
                     <div className="flex justify-start">
                       <div className="bg-secondary/70 rounded-2xl px-5 py-3">
                         <div className="flex items-center gap-2">
                           <Loader2 className="w-4 h-4 animate-spin text-primary" />
-                          <span className="text-sm text-muted-foreground">Searching knowledge base...</span>
+                          <span className="text-sm text-muted-foreground">{t.searchingKnowledgeBase}</span>
                         </div>
                       </div>
                     </div>
@@ -467,13 +536,7 @@ export const QueryInterface = ({ language }: QueryInterfaceProps) => {
                   type="text"
                   value={query}
                   onChange={(e) => setQuery(e.target.value)}
-                  placeholder={
-                    language === 'hi' 
-                      ? 'अपना प्रश्न यहाँ पूछें...' 
-                      : language === 'ta'
-                      ? 'உங்கள் கேள்வியை இங்கே கேளுங்கள்...'
-                      : 'Ask your question here...'
-                  }
+                  placeholder={t.askPlaceholder}
                   className="query-input flex-1"
                   disabled={isLoading || isWebSearching}
                 />
@@ -482,8 +545,9 @@ export const QueryInterface = ({ language }: QueryInterfaceProps) => {
                   variant="hero"
                   size="lg"
                   disabled={isLoading || isWebSearching || !query.trim()}
+                  title={t.send}
                 >
-                  {isLoading ? (
+                  {isLoading || isWebSearching ? (
                     <Loader2 className="w-5 h-5 animate-spin" />
                   ) : (
                     <Send className="w-5 h-5" />
@@ -495,7 +559,7 @@ export const QueryInterface = ({ language }: QueryInterfaceProps) => {
                   onClick={clearConversation}
                   className="mt-2 text-xs text-muted-foreground hover:text-foreground transition-colors"
                 >
-                  Clear conversation
+                  {t.clearConversation}
                 </button>
               )}
             </div>
