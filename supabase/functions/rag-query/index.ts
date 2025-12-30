@@ -189,7 +189,7 @@ serve(async (req) => {
       ? `\n\nRelevant context from uploaded documents:\n${contextChunks.map((c, i) => `[Document ${i + 1}] ${c.content_chunk}`).join('\n\n')}`
       : '';
 
-    const systemPrompt = `You are FundingIQ, an expert AI assistant specializing in Indian startup funding intelligence. Your role is to provide accurate, grounded insights about:
+    const systemPrompt = `You are VentureLens, an expert AI assistant specializing in Indian startup funding intelligence. Your role is to provide accurate, grounded insights about:
 
 1. **Startup Funding**: Investment rounds, valuations, funding trends, deal sizes
 2. **Investors**: VCs, angel investors, PE firms, their portfolios and investment patterns  

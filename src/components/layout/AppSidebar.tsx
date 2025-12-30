@@ -1,9 +1,10 @@
 import { useState } from 'react';
-import { MessageSquare, BarChart3, Building2, FileText, Database, Globe, Sparkles, ChevronLeft, ChevronRight, BookOpen } from 'lucide-react';
+import { MessageSquare, BarChart3, Building2, FileText, Database, Globe, ChevronLeft, ChevronRight, BookOpen } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { SUPPORTED_LANGUAGES, LanguageCode } from '@/lib/constants';
 import { getTranslation } from '@/lib/localization';
 import { cn } from '@/lib/utils';
+import logo from '@/assets/logo.png';
 
 interface AppSidebarProps {
   selectedLanguage: LanguageCode;
@@ -21,7 +22,7 @@ export const AppSidebar = ({ selectedLanguage, onLanguageChange, onToggleKnowled
   const currentLang = SUPPORTED_LANGUAGES.find(l => l.code === selectedLanguage);
 
   const menuItems = [
-    { id: 'query', label: t.askFundingIQ, icon: MessageSquare, href: '#query' },
+    { id: 'query', label: t.askVentureLens, icon: MessageSquare, href: '#query' },
     { id: 'dashboard', label: t.marketInsights, icon: BarChart3, href: '#dashboard' },
     { id: 'investors', label: t.findInvestors, icon: Building2, href: '#investors' },
     { id: 'policies', label: t.governmentSchemes, icon: FileText, href: '#policies' },
@@ -55,14 +56,12 @@ export const AppSidebar = ({ selectedLanguage, onLanguageChange, onToggleKnowled
       <div className={cn("p-6 border-b border-border", isCollapsed && "px-4")}>
         <div className="flex items-center gap-3">
           <div className="relative flex-shrink-0">
-            <div className="w-10 h-10 rounded-xl bg-primary/20 flex items-center justify-center">
-              <Sparkles className="w-5 h-5 text-primary" />
-            </div>
+            <img src={logo} alt="VentureLens" className="w-10 h-10 object-contain" />
           </div>
           {!isCollapsed && (
             <div>
               <h1 className="font-display font-bold text-lg text-foreground">
-                FundingIQ
+                VentureLens
               </h1>
               <p className="text-[10px] text-muted-foreground uppercase tracking-wider">
                 {t.startupIntelligence}

@@ -44,7 +44,7 @@ serve(async (req) => {
 
     const langConfig = SUPPORTED_LANGUAGES[language] || SUPPORTED_LANGUAGES.en;
 
-    const systemPrompt = `You are FundingIQ, an expert AI assistant specializing in Indian startup funding intelligence. You are now searching the web for real-time information.
+    const systemPrompt = `You are VentureLens, an expert AI assistant specializing in Indian startup funding intelligence. You are now searching the web for real-time information.
 
 Your role is to provide accurate, up-to-date insights about:
 1. **Startup Funding**: Investment rounds, valuations, funding trends, deal sizes
