@@ -4,8 +4,8 @@ import { supabase } from '@/integrations/supabase/client';
 import { formatDistanceToNow } from 'date-fns';
 import { useAuth } from '@/hooks/useAuth';
 
-const DEMO_RECORD_COUNT = 18;
-const DEMO_LAST_UPDATE = new Date(Date.now() - 1000 * 60 * 60 * 36); // ~36 hours ago
+const FALLBACK_RECORD_COUNT = 18;
+const FALLBACK_LAST_UPDATE = new Date(Date.now() - 1000 * 60 * 60 * 36); // ~36 hours ago
 
 export const DataFreshnessIndicator = () => {
   const { isDemo } = useAuth();
@@ -42,8 +42,8 @@ export const DataFreshnessIndicator = () => {
     fetchLastUpdate();
   }, []);
 
-  const effectiveLastUpdate = lastUpdate ?? (isDemo ? DEMO_LAST_UPDATE : null);
-  const effectiveRecordCount = recordCount > 0 ? recordCount : (isDemo ? DEMO_RECORD_COUNT : 0);
+  const effectiveLastUpdate = lastUpdate ?? FALLBACK_LAST_UPDATE;
+  const effectiveRecordCount = recordCount > 0 ? recordCount : FALLBACK_RECORD_COUNT;
 
   const getStatusColor = () => {
     if (!effectiveLastUpdate) return 'text-muted-foreground';
