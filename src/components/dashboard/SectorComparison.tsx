@@ -41,7 +41,9 @@ export const SectorComparison = ({ data = [], isLoading }: SectorComparisonProps
     data.forEach(record => {
       if (record.sector) sectors.add(record.sector);
     });
-    return Array.from(sectors).sort();
+    const result = Array.from(sectors).sort();
+    console.log('SectorComparison - data length:', data.length, 'available sectors:', result);
+    return result;
   }, [data]);
 
   const comparisonData = useMemo(() => {
@@ -95,12 +97,18 @@ export const SectorComparison = ({ data = [], isLoading }: SectorComparisonProps
     return { monthly, summary };
   }, [data, selectedSectors]);
 
-  const toggleSector = (sector: string) => {
-    setSelectedSectors(prev => 
-      prev.includes(sector) 
-        ? prev.filter(s => s !== sector)
-        : prev.length < 5 ? [...prev, sector] : prev
-    );
+  const toggleSector = (sector: string, checked: boolean | 'indeterminate') => {
+    if (checked === 'indeterminate') return;
+    
+    setSelectedSectors(prev => {
+      if (checked) {
+        // Adding sector
+        return prev.length < 5 ? [...prev, sector] : prev;
+      } else {
+        // Removing sector
+        return prev.filter(s => s !== sector);
+      }
+    });
   };
 
   if (isLoading) {
@@ -129,7 +137,7 @@ export const SectorComparison = ({ data = [], isLoading }: SectorComparisonProps
               <Checkbox
                 id={`sector-${sector}`}
                 checked={selectedSectors.includes(sector)}
-                onCheckedChange={() => toggleSector(sector)}
+                onCheckedChange={(checked) => toggleSector(sector, checked)}
                 disabled={!selectedSectors.includes(sector) && selectedSectors.length >= 5}
               />
               <Label
