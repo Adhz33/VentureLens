@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { Card } from '@/components/ui/card';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Label } from '@/components/ui/label';
@@ -80,16 +80,17 @@ const getSectorColor = (sector: string, index: number): string => {
 
 export const SectorComparison = ({ data = [], isLoading, selectedLanguage = 'en' }: SectorComparisonProps) => {
   const [selectedSectors, setSelectedSectors] = useState<string[]>([]);
+  const [hasInitialized, setHasInitialized] = useState(false);
   const t = translations[selectedLanguage];
   const { isDemo } = useAuth();
 
-  // Use demo data if in demo mode and no real data is available
+  // Use demo data if in demo mode or no real data is available
   const effectiveData = useMemo(() => {
-    if (isDemo && data.length === 0) {
+    if (data.length === 0) {
       return DEMO_FUNDING_DATA;
     }
     return data;
-  }, [data, isDemo]);
+  }, [data]);
 
   const availableSectors = useMemo(() => {
     const sectors = new Set<string>();
@@ -97,9 +98,16 @@ export const SectorComparison = ({ data = [], isLoading, selectedLanguage = 'en'
       if (record.sector) sectors.add(record.sector);
     });
     const result = Array.from(sectors).sort();
-    console.log('SectorComparison - data length:', effectiveData.length, 'available sectors:', result);
     return result;
   }, [effectiveData]);
+
+  // Auto-select first 3 sectors when data is available
+  useEffect(() => {
+    if (!hasInitialized && availableSectors.length > 0 && selectedSectors.length === 0) {
+      setSelectedSectors(availableSectors.slice(0, 3));
+      setHasInitialized(true);
+    }
+  }, [availableSectors, hasInitialized, selectedSectors.length]);
 
   const comparisonData = useMemo(() => {
     if (selectedSectors.length === 0) return { monthly: [], summary: [] };
