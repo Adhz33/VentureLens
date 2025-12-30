@@ -101,8 +101,15 @@ export const KnowledgeBasePanel = ({
 
     setIsUploading(true);
     try {
-      // Upload to storage
-      const fileName = `${Date.now()}-${file.name}`;
+      // Sanitize filename: replace special characters and spaces
+      const sanitizedName = file.name
+        .normalize('NFD')
+        .replace(/[\u0300-\u036f]/g, '') // Remove diacritics
+        .replace(/[–—]/g, '-') // Replace em/en dashes with hyphen
+        .replace(/[^\w.\-]/g, '_') // Replace other special chars with underscore
+        .replace(/_+/g, '_'); // Collapse multiple underscores
+      
+      const fileName = `${Date.now()}-${sanitizedName}`;
       const { data: uploadData, error: uploadError } = await supabase
         .storage
         .from('knowledge-base')
