@@ -17,6 +17,7 @@ import { InvestorCard } from '@/components/investors/InvestorCard';
 import { PolicyCard } from '@/components/policies/PolicyCard';
 import { DataSourcePanel } from '@/components/data/DataSourcePanel';
 import { LanguageCode } from '@/lib/constants';
+import { getTranslation } from '@/lib/localization';
 import { useFundingData, DateRange } from '@/hooks/useFundingData';
 import { cn } from '@/lib/utils';
 
@@ -90,6 +91,7 @@ const Index = () => {
   });
   const [isKnowledgeBaseOpen, setIsKnowledgeBaseOpen] = useState(false);
 
+  const t = getTranslation(selectedLanguage);
   const { data, isLoading, stats, monthlyTrends, sectorBreakdown } = useFundingData(dateRange);
 
   return (
@@ -107,7 +109,7 @@ const Index = () => {
       )}>
         <KnowledgeBasePanel 
           isOpen={isKnowledgeBaseOpen} 
-          onClose={() => setIsKnowledgeBaseOpen(false)} 
+          onClose={() => setIsKnowledgeBaseOpen(false)}
         />
         {/* Dashboard Section */}
         <section id="dashboard" className="py-12 bg-background relative">
@@ -117,10 +119,10 @@ const Index = () => {
             <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4 mb-12">
               <div>
                 <h2 className="font-display font-bold text-3xl md:text-4xl text-foreground mb-2">
-                  Funding <span className="text-gradient">Dashboard</span>
+                  {t.fundingDashboard.split(' ')[0]} <span className="text-gradient">{t.fundingDashboard.split(' ')[1] || 'Dashboard'}</span>
                 </h2>
                 <p className="text-muted-foreground">
-                  Real-time insights into startup ecosystem funding activity
+                  {t.dashboardSubtitle}
                 </p>
               </div>
               <div className="flex flex-wrap items-center gap-3">
@@ -133,33 +135,33 @@ const Index = () => {
             {/* Stats Grid */}
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
               <StatCard
-                title="Total Funding"
+                title={t.totalFunding}
                 value={stats.totalFunding > 0 ? formatCurrency(stats.totalFunding) : "$12.4B"}
-                change={stats.totalDeals > 0 ? `${stats.totalDeals} deals in period` : "+23% from 2023"}
+                change={stats.totalDeals > 0 ? `${stats.totalDeals} ${t.dealsInPeriod}` : "+23% from 2023"}
                 changeType="positive"
                 icon={DollarSign}
                 delay={100}
               />
               <StatCard
-                title="Unique Investors"
+                title={t.uniqueInvestors}
                 value={stats.uniqueInvestors > 0 ? stats.uniqueInvestors.toString() : "847"}
-                change={stats.uniqueInvestors > 0 ? "Active in period" : "+12% this quarter"}
+                change={stats.uniqueInvestors > 0 ? t.activeInPeriod : "+12% this quarter"}
                 changeType="positive"
                 icon={Users}
                 delay={200}
               />
               <StatCard
-                title="Funded Startups"
+                title={t.fundedStartups}
                 value={stats.uniqueStartups > 0 ? stats.uniqueStartups.toString() : "1,234"}
-                change={stats.uniqueStartups > 0 ? "In selected range" : "156 new this month"}
+                change={stats.uniqueStartups > 0 ? t.inSelectedRange : "156 new this month"}
                 changeType="neutral"
                 icon={Building2}
                 delay={300}
               />
               <StatCard
-                title="Data Sources"
+                title={t.dataSourcesCount}
                 value="89"
-                change="15 new sources added"
+                change={`15 ${t.newSourcesAdded}`}
                 changeType="positive"
                 icon={Database}
                 delay={400}
@@ -193,10 +195,10 @@ const Index = () => {
           <div className="container mx-auto px-4">
             <div className="text-center mb-12">
               <h2 className="font-display font-bold text-3xl md:text-4xl text-foreground mb-4">
-                Top <span className="text-gradient">Investors</span>
+                {t.topInvestors.split(' ')[0]} <span className="text-gradient">{t.topInvestors.split(' ')[1] || 'Investors'}</span>
               </h2>
               <p className="text-muted-foreground max-w-2xl mx-auto">
-                Leading venture capital and private equity firms active in the Indian startup ecosystem
+                {t.investorsDescription}
               </p>
             </div>
 
@@ -219,10 +221,10 @@ const Index = () => {
           <div className="container mx-auto px-4 relative z-10">
             <div className="text-center mb-12">
               <h2 className="font-display font-bold text-3xl md:text-4xl text-foreground mb-4">
-                Government <span className="text-gradient">Policies</span>
+                {t.governmentPolicies.split(' ')[0]} <span className="text-gradient">{t.governmentPolicies.split(' ')[1] || 'Policies'}</span>
               </h2>
               <p className="text-muted-foreground max-w-2xl mx-auto">
-                Schemes and initiatives supporting startups and entrepreneurs
+                {t.policiesDescription}
               </p>
             </div>
 
@@ -253,11 +255,11 @@ const Index = () => {
               </div>
               
               <p className="text-sm text-muted-foreground text-center">
-                Multilingual RAG-based Startup Funding Intelligence System
+                {t.footerTagline}
               </p>
               
               <p className="text-sm text-muted-foreground">
-                © 2024 FundingIQ. Built with ❤️
+                © 2024 FundingIQ. {t.builtWith}
               </p>
             </div>
           </div>

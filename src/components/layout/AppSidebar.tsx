@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { MessageSquare, BarChart3, Building2, FileText, Database, Globe, Sparkles, ChevronLeft, ChevronRight, BookOpen } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { SUPPORTED_LANGUAGES, LanguageCode } from '@/lib/constants';
+import { getTranslation } from '@/lib/localization';
 import { cn } from '@/lib/utils';
 
 interface AppSidebarProps {
@@ -11,20 +12,21 @@ interface AppSidebarProps {
   isKnowledgeBaseOpen?: boolean;
 }
 
-const menuItems = [
-  { id: 'query', label: 'Ask FundingIQ', icon: MessageSquare, href: '#query' },
-  { id: 'dashboard', label: 'Market Insights', icon: BarChart3, href: '#dashboard' },
-  { id: 'investors', label: 'Find Investors', icon: Building2, href: '#investors' },
-  { id: 'policies', label: 'Government Schemes', icon: FileText, href: '#policies' },
-  { id: 'sources', label: 'Data Sources', icon: Database, href: '#sources' },
-];
-
 export const AppSidebar = ({ selectedLanguage, onLanguageChange, onToggleKnowledgeBase, isKnowledgeBaseOpen }: AppSidebarProps) => {
   const [activeItem, setActiveItem] = useState('query');
   const [isLangOpen, setIsLangOpen] = useState(false);
   const [isCollapsed, setIsCollapsed] = useState(false);
 
+  const t = getTranslation(selectedLanguage);
   const currentLang = SUPPORTED_LANGUAGES.find(l => l.code === selectedLanguage);
+
+  const menuItems = [
+    { id: 'query', label: t.askFundingIQ, icon: MessageSquare, href: '#query' },
+    { id: 'dashboard', label: t.marketInsights, icon: BarChart3, href: '#dashboard' },
+    { id: 'investors', label: t.findInvestors, icon: Building2, href: '#investors' },
+    { id: 'policies', label: t.governmentSchemes, icon: FileText, href: '#policies' },
+    { id: 'sources', label: t.dataSources, icon: Database, href: '#sources' },
+  ];
 
   const handleNavClick = (id: string) => {
     setActiveItem(id);
@@ -63,7 +65,7 @@ export const AppSidebar = ({ selectedLanguage, onLanguageChange, onToggleKnowled
                 FundingIQ
               </h1>
               <p className="text-[10px] text-muted-foreground uppercase tracking-wider">
-                Startup Intelligence
+                {t.startupIntelligence}
               </p>
             </div>
           )}
@@ -74,7 +76,7 @@ export const AppSidebar = ({ selectedLanguage, onLanguageChange, onToggleKnowled
       {!isCollapsed && (
         <div className="px-6 pt-6 pb-2">
           <span className="text-xs font-medium text-muted-foreground uppercase tracking-wider">
-            Menu
+            {t.menu}
           </span>
         </div>
       )}
@@ -115,10 +117,10 @@ export const AppSidebar = ({ selectedLanguage, onLanguageChange, onToggleKnowled
               : "text-muted-foreground hover:bg-secondary hover:text-foreground",
             isCollapsed && "justify-center px-3"
           )}
-          title={isCollapsed ? "Knowledge Base" : undefined}
+          title={isCollapsed ? t.knowledgeBase : undefined}
         >
           <BookOpen className="w-5 h-5 flex-shrink-0" />
-          {!isCollapsed && <span>Knowledge Base</span>}
+          {!isCollapsed && <span>{t.knowledgeBase}</span>}
         </button>
       </div>
 
@@ -170,8 +172,8 @@ export const AppSidebar = ({ selectedLanguage, onLanguageChange, onToggleKnowled
           </div>
           {!isCollapsed && (
             <div>
-              <p className="text-sm font-medium text-foreground">Powered by RAG</p>
-              <p className="text-[10px] text-muted-foreground">Retrieval Augmented GenAI</p>
+              <p className="text-sm font-medium text-foreground">{t.poweredByRag}</p>
+              <p className="text-[10px] text-muted-foreground">{t.retrievalAugmented}</p>
             </div>
           )}
         </div>
