@@ -17,7 +17,8 @@ interface QueryInterfaceProps {
   language: LanguageCode;
 }
 
-const CHAT_URL = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/rag-query`;
+const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL;
+const SUPABASE_ANON_KEY = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY;
 
 export const QueryInterface = ({ language }: QueryInterfaceProps) => {
   const [query, setQuery] = useState('');
@@ -54,11 +55,12 @@ export const QueryInterface = ({ language }: QueryInterfaceProps) => {
     setStreamingContent('');
 
     try {
-      const response = await fetch(CHAT_URL, {
+      const response = await fetch(`${SUPABASE_URL}/functions/v1/rag-query`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
+          'Authorization': `Bearer ${SUPABASE_ANON_KEY}`,
+          'apikey': SUPABASE_ANON_KEY,
         },
         body: JSON.stringify({ 
           query: currentQuery,
@@ -69,13 +71,14 @@ export const QueryInterface = ({ language }: QueryInterfaceProps) => {
       });
 
       if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
         if (response.status === 429) {
           throw new Error('Rate limit exceeded. Please try again in a moment.');
         }
         if (response.status === 402) {
           throw new Error('AI credits exhausted. Please add credits to continue.');
         }
-        throw new Error('Failed to get response');
+        throw new Error(errorData.error || 'Failed to get response');
       }
 
       // Parse document sources from header
@@ -122,6 +125,7 @@ export const QueryInterface = ({ language }: QueryInterfaceProps) => {
               setStreamingContent(fullContent);
             }
           } catch {
+            // Partial JSON, put back and wait for more data
             textBuffer = line + '\n' + textBuffer;
             break;
           }
@@ -151,10 +155,6 @@ export const QueryInterface = ({ language }: QueryInterfaceProps) => {
         id: (Date.now() + 1).toString(),
         role: 'assistant',
         content: fullContent || 'I apologize, but I could not generate a response. Please try again.',
-        sources: [
-          { title: 'Inc42 Funding Report', url: 'https://inc42.com/buzz/funding-galore' },
-          { title: 'Startup India Portal', url: 'https://startupindia.gov.in' },
-        ],
         documentSources: documentSources.length > 0 ? documentSources : undefined,
       };
 
