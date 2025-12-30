@@ -110,6 +110,7 @@ const Index = () => {
         <KnowledgeBasePanel 
           isOpen={isKnowledgeBaseOpen} 
           onClose={() => setIsKnowledgeBaseOpen(false)}
+          selectedLanguage={selectedLanguage}
         />
         {/* Dashboard Section */}
         <section id="dashboard" className="py-12 bg-background relative">
@@ -127,8 +128,12 @@ const Index = () => {
               </div>
               <div className="flex flex-wrap items-center gap-3">
                 <DataFreshnessIndicator />
-                <DateRangeFilter dateRange={dateRange} onDateRangeChange={setDateRange} />
-                <ExportPanel />
+                <DateRangeFilter 
+                  dateRange={dateRange} 
+                  onDateRangeChange={setDateRange}
+                  selectedLanguage={selectedLanguage}
+                />
+                <ExportPanel selectedLanguage={selectedLanguage} />
               </div>
             </div>
 
@@ -171,19 +176,35 @@ const Index = () => {
             {/* Charts Row */}
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
               <div className="lg:col-span-2">
-                <FundingChart data={monthlyTrends} isLoading={isLoading} />
+                <FundingChart 
+                  data={monthlyTrends} 
+                  isLoading={isLoading}
+                  selectedLanguage={selectedLanguage}
+                />
               </div>
-              <SectorBreakdown data={sectorBreakdown} isLoading={isLoading} />
+              <SectorBreakdown 
+                data={sectorBreakdown} 
+                isLoading={isLoading}
+                selectedLanguage={selectedLanguage}
+              />
             </div>
 
             {/* Comparison and Analysis Row */}
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
-              <FundingComparison />
-              <SectorAnalysis data={sectorBreakdown} isLoading={isLoading} />
+              <FundingComparison selectedLanguage={selectedLanguage} />
+              <SectorAnalysis 
+                data={sectorBreakdown} 
+                isLoading={isLoading}
+                selectedLanguage={selectedLanguage}
+              />
             </div>
 
             {/* Sector Comparison Tool */}
-            <SectorComparison data={data} isLoading={isLoading} />
+            <SectorComparison 
+              data={data} 
+              isLoading={isLoading}
+              selectedLanguage={selectedLanguage}
+            />
           </div>
         </section>
 
@@ -241,7 +262,7 @@ const Index = () => {
         </section>
 
         {/* Data Sources */}
-        <DataSourcePanel />
+        <DataSourcePanel selectedLanguage={selectedLanguage} />
 
         {/* Footer */}
         <footer className="py-12 border-t border-border/50">

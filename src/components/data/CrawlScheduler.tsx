@@ -3,6 +3,8 @@ import { RefreshCw, Clock, CheckCircle, AlertCircle, Play, Calendar, Globe, Load
 import { Button } from '@/components/ui/button';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
+import { LanguageCode } from '@/lib/constants';
+import { getTranslation } from '@/lib/localization';
 
 interface CrawlResult {
   source: string;
@@ -20,6 +22,10 @@ interface CrawlStatus {
   results?: CrawlResult[];
 }
 
+interface CrawlSchedulerProps {
+  selectedLanguage?: LanguageCode;
+}
+
 const SOURCES = [
   { name: 'Inc42 Funding Galore', url: 'https://inc42.com/buzz/funding-galore' },
   { name: 'YourStory Funding', url: 'https://yourstory.com/companies/funding' },
@@ -28,10 +34,11 @@ const SOURCES = [
   { name: 'Startup India Schemes', url: 'https://startupindia.gov.in/content/sih/en/government-schemes.html' },
 ];
 
-export const CrawlScheduler = () => {
+export const CrawlScheduler = ({ selectedLanguage = 'en' }: CrawlSchedulerProps) => {
   const [status, setStatus] = useState<CrawlStatus>({ isRunning: false });
   const [isManualRunning, setIsManualRunning] = useState(false);
   const { toast } = useToast();
+  const t = getTranslation(selectedLanguage);
 
   useEffect(() => {
     // Calculate next run time (6 AM UTC daily)
@@ -50,8 +57,8 @@ export const CrawlScheduler = () => {
 
     try {
       toast({
-        title: 'Crawl Started',
-        description: 'Fetching latest funding data from all sources...',
+        title: t.dataIngested,
+        description: t.contentScraped,
       });
 
       const { data, error } = await supabase.functions.invoke('scheduled-crawl', {
@@ -70,15 +77,15 @@ export const CrawlScheduler = () => {
       const successCount = data.results?.filter((r: CrawlResult) => r.status === 'success').length || 0;
 
       toast({
-        title: 'Crawl Completed',
-        description: `Successfully processed ${successCount} sources in ${data.duration}`,
+        title: t.dataIngested,
+        description: `${successCount} ${t.sourcesReady}`,
       });
     } catch (error) {
       console.error('Manual crawl error:', error);
       setStatus(prev => ({ ...prev, isRunning: false }));
       toast({
-        title: 'Crawl Failed',
-        description: error instanceof Error ? error.message : 'Failed to run crawl',
+        title: t.ingestionFailed,
+        description: error instanceof Error ? error.message : t.failedToScrape,
         variant: 'destructive',
       });
     } finally {
@@ -87,7 +94,7 @@ export const CrawlScheduler = () => {
   };
 
   const formatDate = (dateString?: string) => {
-    if (!dateString) return 'Never';
+    if (!dateString) return t.failed;
     return new Date(dateString).toLocaleString();
   };
 
@@ -97,10 +104,10 @@ export const CrawlScheduler = () => {
         <div>
           <h3 className="font-display font-semibold text-lg text-foreground flex items-center gap-2">
             <RefreshCw className="w-5 h-5 text-primary" />
-            Scheduled Data Ingestion
+            {t.automatedDataCrawler}
           </h3>
           <p className="text-sm text-muted-foreground mt-1">
-            Automatically crawls funding sources daily at 6:00 AM UTC
+            {t.dataSourcesDescription}
           </p>
         </div>
         <Button
@@ -115,7 +122,7 @@ export const CrawlScheduler = () => {
           ) : (
             <Play className="w-4 h-4" />
           )}
-          Run Now
+          {isManualRunning ? t.running : t.runNow}
         </Button>
       </div>
 
@@ -124,7 +131,7 @@ export const CrawlScheduler = () => {
         <div className="bg-secondary/30 rounded-xl p-4">
           <div className="flex items-center gap-2 text-muted-foreground mb-1">
             <Clock className="w-4 h-4" />
-            <span className="text-xs">Last Run</span>
+            <span className="text-xs">{t.lastRun}</span>
           </div>
           <p className="text-sm font-medium text-foreground">
             {formatDate(status.lastRun)}
@@ -133,7 +140,7 @@ export const CrawlScheduler = () => {
         <div className="bg-secondary/30 rounded-xl p-4">
           <div className="flex items-center gap-2 text-muted-foreground mb-1">
             <Calendar className="w-4 h-4" />
-            <span className="text-xs">Next Scheduled</span>
+            <span className="text-xs">{t.nextScheduledRun}</span>
           </div>
           <p className="text-sm font-medium text-foreground">
             {formatDate(status.nextRun)}
@@ -143,7 +150,7 @@ export const CrawlScheduler = () => {
 
       {/* Sources List */}
       <div className="space-y-2">
-        <p className="text-xs text-muted-foreground mb-2">Configured Sources ({SOURCES.length})</p>
+        <p className="text-xs text-muted-foreground mb-2">{t.configuredSources} ({SOURCES.length})</p>
         {SOURCES.map((source, idx) => {
           const result = status.results?.find(r => r.source === source.name);
           return (
@@ -166,19 +173,19 @@ export const CrawlScheduler = () => {
                     {result.status === 'success' && (
                       <span className="flex items-center gap-1 text-xs text-success">
                         <CheckCircle className="w-3 h-3" />
-                        {result.chunks} chunks
+                        {result.chunks} {t.chunks}
                       </span>
                     )}
                     {result.status === 'skipped' && (
                       <span className="flex items-center gap-1 text-xs text-muted-foreground">
                         <Clock className="w-3 h-3" />
-                        Skipped
+                        {t.processing}
                       </span>
                     )}
                     {result.status === 'error' && (
                       <span className="flex items-center gap-1 text-xs text-destructive">
                         <AlertCircle className="w-3 h-3" />
-                        Error
+                        {t.failed}
                       </span>
                     )}
                   </>
