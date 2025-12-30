@@ -1,6 +1,7 @@
 import { useState, useRef, useEffect, useCallback } from 'react';
 import { Send, Loader2, Sparkles, ChevronRight, FileText, Globe, Search, FileSearch, Layers } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { LoadingSpinner } from '@/components/ui/loading-spinner';
 import { LanguageCode, SAMPLE_QUERIES } from '@/lib/constants';
 import { getTranslation, SearchMode } from '@/lib/localization';
 import { useToast } from '@/hooks/use-toast';
@@ -505,9 +506,9 @@ export const QueryInterface = ({ language }: QueryInterfaceProps) => {
                   {/* Web Search Loading */}
                   {isWebSearching && (
                     <div className="flex justify-start">
-                      <div className="bg-secondary/70 rounded-2xl px-5 py-3">
-                        <div className="flex items-center gap-2">
-                          <Loader2 className="w-4 h-4 animate-spin text-primary" />
+                      <div className="bg-secondary/70 rounded-2xl px-6 py-4">
+                        <div className="flex items-center gap-4">
+                          <LoadingSpinner size="sm" />
                           <span className="text-sm text-muted-foreground">{t.searchingWeb}</span>
                         </div>
                       </div>
@@ -516,9 +517,9 @@ export const QueryInterface = ({ language }: QueryInterfaceProps) => {
                   
                   {isLoading && !streamingContent && !isWebSearching && (
                     <div className="flex justify-start">
-                      <div className="bg-secondary/70 rounded-2xl px-5 py-3">
-                        <div className="flex items-center gap-2">
-                          <Loader2 className="w-4 h-4 animate-spin text-primary" />
+                      <div className="bg-secondary/70 rounded-2xl px-6 py-4">
+                        <div className="flex items-center gap-4">
+                          <LoadingSpinner size="sm" />
                           <span className="text-sm text-muted-foreground">{t.searchingKnowledgeBase}</span>
                         </div>
                       </div>
