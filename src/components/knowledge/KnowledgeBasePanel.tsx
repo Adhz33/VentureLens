@@ -6,6 +6,8 @@ import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
+import { LanguageCode } from '@/lib/constants';
+import { getTranslation } from '@/lib/localization';
 
 interface Document {
   id: string;
@@ -24,15 +26,22 @@ interface KnowledgeBasePanelProps {
   isOpen: boolean;
   onClose: () => void;
   onNewConversation?: () => void;
+  selectedLanguage?: LanguageCode;
 }
 
-export const KnowledgeBasePanel = ({ isOpen, onClose, onNewConversation }: KnowledgeBasePanelProps) => {
+export const KnowledgeBasePanel = ({ 
+  isOpen, 
+  onClose, 
+  onNewConversation,
+  selectedLanguage = 'en'
+}: KnowledgeBasePanelProps) => {
   const [searchQuery, setSearchQuery] = useState('');
   const [documents, setDocuments] = useState<Document[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isUploading, setIsUploading] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const { toast } = useToast();
+  const t = getTranslation(selectedLanguage);
 
   const fetchDocuments = async () => {
     setIsLoading(true);
@@ -47,8 +56,8 @@ export const KnowledgeBasePanel = ({ isOpen, onClose, onNewConversation }: Knowl
     } catch (error) {
       console.error('Error fetching documents:', error);
       toast({
-        title: 'Error',
-        description: 'Failed to load documents',
+        title: t.errorTitle,
+        description: t.failed,
         variant: 'destructive',
       });
     } finally {
@@ -94,8 +103,8 @@ export const KnowledgeBasePanel = ({ isOpen, onClose, onNewConversation }: Knowl
       if (docError) throw docError;
 
       toast({
-        title: 'Document uploaded',
-        description: 'Processing document for RAG...',
+        title: t.documentUploaded,
+        description: t.processingForRag,
       });
 
       // Trigger document processing
@@ -106,8 +115,8 @@ export const KnowledgeBasePanel = ({ isOpen, onClose, onNewConversation }: Knowl
       if (processError) {
         console.error('Processing error:', processError);
         toast({
-          title: 'Processing started',
-          description: 'Document will be ready shortly',
+          title: t.processingStarted,
+          description: t.documentReady,
         });
       }
 
@@ -117,8 +126,8 @@ export const KnowledgeBasePanel = ({ isOpen, onClose, onNewConversation }: Knowl
     } catch (error) {
       console.error('Upload error:', error);
       toast({
-        title: 'Upload failed',
-        description: error instanceof Error ? error.message : 'Failed to upload document',
+        title: t.uploadFailed,
+        description: error instanceof Error ? error.message : t.failed,
         variant: 'destructive',
       });
     } finally {
@@ -143,7 +152,7 @@ export const KnowledgeBasePanel = ({ isOpen, onClose, onNewConversation }: Knowl
       if (error) throw error;
 
       toast({
-        title: 'Document deleted',
+        title: t.documentDeleted,
         description: doc.file_name,
       });
 
@@ -151,8 +160,8 @@ export const KnowledgeBasePanel = ({ isOpen, onClose, onNewConversation }: Knowl
     } catch (error) {
       console.error('Delete error:', error);
       toast({
-        title: 'Delete failed',
-        description: 'Failed to delete document',
+        title: t.deleteFailed,
+        description: t.failed,
         variant: 'destructive',
       });
     }
@@ -228,8 +237,8 @@ export const KnowledgeBasePanel = ({ isOpen, onClose, onNewConversation }: Knowl
                 <Database className="w-5 h-5 text-primary" />
               </div>
               <div>
-                <h2 className="font-display font-bold text-foreground">Knowledge Base</h2>
-                <p className="text-xs text-muted-foreground">RAG Context Data</p>
+                <h2 className="font-display font-bold text-foreground">{t.knowledgeBaseTitle}</h2>
+                <p className="text-xs text-muted-foreground">{t.ragContextData}</p>
               </div>
             </div>
             <button
@@ -244,7 +253,7 @@ export const KnowledgeBasePanel = ({ isOpen, onClose, onNewConversation }: Knowl
           <div className="p-4 space-y-3 border-b border-border">
             <Button className="w-full gap-2" size="lg" onClick={onNewConversation}>
               <Plus className="w-4 h-4" />
-              New Conversation
+              {t.newConversation}
             </Button>
             <input
               ref={fileInputRef}
@@ -264,7 +273,7 @@ export const KnowledgeBasePanel = ({ isOpen, onClose, onNewConversation }: Knowl
               ) : (
                 <Upload className="w-4 h-4" />
               )}
-              {isUploading ? 'Uploading...' : 'Upload Document'}
+              {isUploading ? t.uploading : t.uploadDocument}
             </Button>
           </div>
 
@@ -273,7 +282,7 @@ export const KnowledgeBasePanel = ({ isOpen, onClose, onNewConversation }: Knowl
             <div className="relative">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
               <Input
-                placeholder="Search documents..."
+                placeholder={t.searchDocuments}
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 className="pl-10"
@@ -286,12 +295,12 @@ export const KnowledgeBasePanel = ({ isOpen, onClose, onNewConversation }: Knowl
             <div className="bg-primary/10 border border-primary/20 rounded-xl p-4 flex items-center gap-4">
               <div className="text-center">
                 <div className="text-2xl font-bold text-foreground">{readyDocsCount}</div>
-                <div className="text-xs text-muted-foreground uppercase tracking-wider">Docs</div>
+                <div className="text-xs text-muted-foreground uppercase tracking-wider">{t.docs}</div>
               </div>
               <div className="border-l border-primary/30 h-10" />
               <div>
-                <div className="font-semibold text-foreground">Source Grounded</div>
-                <div className="text-xs text-muted-foreground">Strict retrieval from these files.</div>
+                <div className="font-semibold text-foreground">{t.sourceGrounded}</div>
+                <div className="text-xs text-muted-foreground">{t.strictRetrieval}</div>
               </div>
             </div>
           </div>
@@ -299,7 +308,7 @@ export const KnowledgeBasePanel = ({ isOpen, onClose, onNewConversation }: Knowl
           {/* Documents List */}
           <div className="flex-1 overflow-auto p-4">
             <h3 className="text-xs font-medium text-muted-foreground uppercase tracking-wider mb-3">
-              Active Documents
+              {t.activeDocuments}
             </h3>
             
             {isLoading ? (
@@ -309,8 +318,8 @@ export const KnowledgeBasePanel = ({ isOpen, onClose, onNewConversation }: Knowl
             ) : filteredDocs.length === 0 ? (
               <div className="text-center py-8 text-muted-foreground text-sm">
                 {documents.length === 0 
-                  ? 'No documents uploaded yet'
-                  : 'No documents match your search'}
+                  ? t.noDocumentsUploaded
+                  : t.noDocumentsMatch}
               </div>
             ) : (
               <div className="space-y-3">
@@ -334,14 +343,14 @@ export const KnowledgeBasePanel = ({ isOpen, onClose, onNewConversation }: Knowl
                           {doc.file_name}
                         </h4>
                         <p className="text-xs text-muted-foreground">
-                          {doc.chunks_count ? `${doc.chunks_count} chunks` : 'Processing...'}
+                          {doc.chunks_count ? `${doc.chunks_count} ${t.chunks}` : t.processing + '...'}
                           {doc.file_size && ` • ${(doc.file_size / 1024).toFixed(1)}KB`}
                         </p>
                       </div>
                       <button
                         onClick={() => handleDeleteDocument(doc)}
                         className="p-1.5 rounded-lg opacity-0 group-hover:opacity-100 hover:bg-destructive/20 transition-all"
-                        title="Delete document"
+                        title={t.deleteFailed}
                       >
                         <Trash2 className="w-4 h-4 text-destructive" />
                       </button>

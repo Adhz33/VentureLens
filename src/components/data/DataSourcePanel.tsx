@@ -5,6 +5,8 @@ import { firecrawlApi } from '@/lib/api/firecrawl';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { CrawlScheduler } from './CrawlScheduler';
+import { LanguageCode } from '@/lib/constants';
+import { getTranslation } from '@/lib/localization';
 
 interface DataSource {
   id: string;
@@ -15,7 +17,11 @@ interface DataSource {
   createdAt: string;
 }
 
-export const DataSourcePanel = () => {
+interface DataSourcePanelProps {
+  selectedLanguage?: LanguageCode;
+}
+
+export const DataSourcePanel = ({ selectedLanguage = 'en' }: DataSourcePanelProps) => {
   const [url, setUrl] = useState('');
   const [isIngesting, setIsIngesting] = useState(false);
   const [dataSources, setDataSources] = useState<DataSource[]>([
@@ -45,6 +51,7 @@ export const DataSourcePanel = () => {
     },
   ]);
   const { toast } = useToast();
+  const t = getTranslation(selectedLanguage);
 
   const handleIngest = async () => {
     if (!url.trim()) return;
@@ -54,7 +61,7 @@ export const DataSourcePanel = () => {
     const newSource: DataSource = {
       id: Date.now().toString(),
       url: url.trim(),
-      title: 'Processing...',
+      title: t.processing + '...',
       sourceType: 'web',
       status: 'processing',
       createdAt: new Date().toISOString().split('T')[0],
@@ -96,8 +103,8 @@ export const DataSourcePanel = () => {
         );
 
         toast({
-          title: 'Data Ingested',
-          description: 'Content has been scraped and processed successfully.',
+          title: t.dataIngested,
+          description: t.contentScraped,
         });
       } else {
         throw new Error(result.error || 'Failed to scrape URL');
@@ -110,8 +117,8 @@ export const DataSourcePanel = () => {
         )
       );
       toast({
-        title: 'Ingestion Failed',
-        description: 'Failed to scrape and process the URL.',
+        title: t.ingestionFailed,
+        description: t.failedToScrape,
         variant: 'destructive',
       });
     } finally {
@@ -148,26 +155,26 @@ export const DataSourcePanel = () => {
       <div className="container mx-auto px-4">
         <div className="text-center mb-12">
           <h2 className="font-display font-bold text-3xl md:text-4xl text-foreground mb-4">
-            Data <span className="text-gradient">Sources</span>
+            {t.dataSourcesTitle.split(' ')[0]} <span className="text-gradient">{t.dataSourcesTitle.split(' ')[1] || 'Sources'}</span>
           </h2>
           <p className="text-muted-foreground max-w-2xl mx-auto">
-            Ingest and manage data from web sources, PDFs, and reports to build your knowledge base.
+            {t.dataSourcesDescription}
           </p>
         </div>
 
         <div className="max-w-4xl mx-auto space-y-8">
           {/* Scheduled Crawler */}
-          <CrawlScheduler />
+          <CrawlScheduler selectedLanguage={selectedLanguage} />
 
           {/* Add URL Form */}
           <div className="glass rounded-2xl p-6">
-            <h3 className="font-display font-semibold text-foreground mb-4">Add Custom Source</h3>
+            <h3 className="font-display font-semibold text-foreground mb-4">{t.addCustomSource}</h3>
             <div className="flex flex-col sm:flex-row gap-4">
               <input
                 type="url"
                 value={url}
                 onChange={(e) => setUrl(e.target.value)}
-                placeholder="Enter URL to scrape (e.g., https://inc42.com/article)"
+                placeholder={t.enterUrlPlaceholder}
                 className="query-input flex-1"
               />
               <Button
@@ -182,7 +189,7 @@ export const DataSourcePanel = () => {
                 ) : (
                   <Plus className="w-5 h-5" />
                 )}
-                Add Source
+                {t.addSource}
               </Button>
             </div>
           </div>
@@ -190,9 +197,9 @@ export const DataSourcePanel = () => {
           {/* Data Sources List */}
           <div className="glass rounded-2xl overflow-hidden">
             <div className="p-4 border-b border-border/50">
-              <h3 className="font-display font-semibold text-foreground">Ingested Sources</h3>
+              <h3 className="font-display font-semibold text-foreground">{t.ingestedSources}</h3>
               <p className="text-sm text-muted-foreground">
-                {dataSources.filter((s) => s.status === 'completed').length} sources ready
+                {dataSources.filter((s) => s.status === 'completed').length} {t.sourcesReady}
               </p>
             </div>
 
