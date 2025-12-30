@@ -11,6 +11,8 @@ import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
+import { LanguageCode } from '@/lib/constants';
+import { translations } from '@/lib/localization';
 
 interface FundingData {
   id: string;
@@ -23,8 +25,13 @@ interface FundingData {
   funding_date: string | null;
 }
 
-export const ExportPanel = () => {
+interface ExportPanelProps {
+  selectedLanguage?: LanguageCode;
+}
+
+export const ExportPanel = ({ selectedLanguage = 'en' }: ExportPanelProps) => {
   const [isExporting, setIsExporting] = useState(false);
+  const t = translations[selectedLanguage];
 
   const fetchFundingData = async (): Promise<FundingData[]> => {
     const { data, error } = await supabase
@@ -53,7 +60,7 @@ export const ExportPanel = () => {
       const data = await fetchFundingData();
       
       if (data.length === 0) {
-        toast.info('No funding data available to export');
+        toast.info(t.noDataToExport);
         return;
       }
 
@@ -81,10 +88,10 @@ export const ExportPanel = () => {
       link.click();
       URL.revokeObjectURL(url);
 
-      toast.success(`Exported ${data.length} records to CSV`);
+      toast.success(`${t.exportedRecords}: ${data.length}`);
     } catch (error) {
       console.error('CSV export error:', error);
-      toast.error('Failed to export CSV');
+      toast.error(t.exportFailed);
     } finally {
       setIsExporting(false);
     }
@@ -96,7 +103,7 @@ export const ExportPanel = () => {
       const data = await fetchFundingData();
 
       if (data.length === 0) {
-        toast.info('No funding data available to export');
+        toast.info(t.noDataToExport);
         return;
       }
 
@@ -121,10 +128,10 @@ export const ExportPanel = () => {
       doc.setTextColor(40, 40, 40);
       doc.text('Summary', 14, 42);
       doc.setFontSize(10);
-      doc.text(`Total Funding: ${formatCurrency(totalFunding)}`, 14, 50);
-      doc.text(`Total Deals: ${data.length}`, 14, 56);
-      doc.text(`Unique Startups: ${uniqueStartups}`, 14, 62);
-      doc.text(`Unique Investors: ${uniqueInvestors}`, 14, 68);
+      doc.text(`${t.totalFunding}: ${formatCurrency(totalFunding)}`, 14, 50);
+      doc.text(`${t.totalDeals}: ${data.length}`, 14, 56);
+      doc.text(`${t.fundedStartups}: ${uniqueStartups}`, 14, 62);
+      doc.text(`${t.uniqueInvestors}: ${uniqueInvestors}`, 14, 68);
 
       // Table
       const tableData = data.slice(0, 50).map(item => [
@@ -160,10 +167,10 @@ export const ExportPanel = () => {
       });
 
       doc.save(`funding_report_${new Date().toISOString().split('T')[0]}.pdf`);
-      toast.success(`Exported ${Math.min(data.length, 50)} records to PDF`);
+      toast.success(`${t.exportedRecords}: ${Math.min(data.length, 50)}`);
     } catch (error) {
       console.error('PDF export error:', error);
-      toast.error('Failed to export PDF');
+      toast.error(t.exportFailed);
     } finally {
       setIsExporting(false);
     }
@@ -178,17 +185,17 @@ export const ExportPanel = () => {
           ) : (
             <Download className="w-4 h-4 mr-2" />
           )}
-          Export
+          {t.export}
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end">
         <DropdownMenuItem onClick={exportToCSV}>
           <FileSpreadsheet className="w-4 h-4 mr-2" />
-          Download CSV
+          {t.downloadCsv}
         </DropdownMenuItem>
         <DropdownMenuItem onClick={exportToPDF}>
           <FileText className="w-4 h-4 mr-2" />
-          Generate PDF Report
+          {t.generatePdfReport}
         </DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>

@@ -1,5 +1,7 @@
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import { Loader2 } from 'lucide-react';
+import { LanguageCode } from '@/lib/constants';
+import { translations } from '@/lib/localization';
 
 interface MonthlyData {
   month: string;
@@ -10,6 +12,7 @@ interface MonthlyData {
 interface FundingChartProps {
   data?: MonthlyData[];
   isLoading?: boolean;
+  selectedLanguage?: LanguageCode;
 }
 
 const fallbackData: MonthlyData[] = [
@@ -27,20 +30,21 @@ const fallbackData: MonthlyData[] = [
   { month: 'Dec', amount: 7200, deals: 82 },
 ];
 
-export const FundingChart = ({ data, isLoading }: FundingChartProps) => {
+export const FundingChart = ({ data, isLoading, selectedLanguage = 'en' }: FundingChartProps) => {
   const chartData = data && data.length > 0 ? data : fallbackData;
+  const t = translations[selectedLanguage];
 
   return (
     <div className="glass rounded-xl p-6 opacity-0 animate-fade-in" style={{ animationDelay: '400ms', animationFillMode: 'forwards' }}>
       <div className="flex items-center justify-between mb-6">
         <div>
-          <h3 className="font-display font-semibold text-lg text-foreground">Funding Trends</h3>
-          <p className="text-sm text-muted-foreground">Monthly investment flow in $M</p>
+          <h3 className="font-display font-semibold text-lg text-foreground">{t.fundingTrends}</h3>
+          <p className="text-sm text-muted-foreground">{t.monthlyFundingTrends}</p>
         </div>
         <div className="flex items-center gap-4">
           <div className="flex items-center gap-2">
             <div className="w-3 h-3 rounded-full bg-primary" />
-            <span className="text-xs text-muted-foreground">Amount</span>
+            <span className="text-xs text-muted-foreground">{t.totalFunding}</span>
           </div>
         </div>
       </div>

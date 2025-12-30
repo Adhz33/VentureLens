@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip } from 'recharts';
-import { BarChart2, Loader2, ChevronDown } from 'lucide-react';
+import { BarChart2, Loader2 } from 'lucide-react';
 import { SectorDrilldown } from './SectorDrilldown';
 import {
   Select,
@@ -9,6 +9,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
+import { LanguageCode } from '@/lib/constants';
+import { translations } from '@/lib/localization';
 
 interface SectorData {
   name: string;
@@ -21,6 +23,7 @@ interface SectorData {
 interface SectorBreakdownProps {
   data?: SectorData[];
   isLoading?: boolean;
+  selectedLanguage?: LanguageCode;
 }
 
 const YEARS = ['2024', '2023', '2022', '2021'];
@@ -64,10 +67,11 @@ const fallbackDataByYear: Record<string, SectorData[]> = {
   ],
 };
 
-export const SectorBreakdown = ({ data, isLoading }: SectorBreakdownProps) => {
+export const SectorBreakdown = ({ data, isLoading, selectedLanguage = 'en' }: SectorBreakdownProps) => {
   const [selectedSector, setSelectedSector] = useState<SectorData | null>(null);
   const [selectedYear, setSelectedYear] = useState('2024');
   const [hoveredSector, setHoveredSector] = useState<string | null>(null);
+  const t = translations[selectedLanguage];
   
   // Always use fallback data for consistent sector display
   const chartData = fallbackDataByYear[selectedYear] || fallbackDataByYear['2024'];
@@ -84,8 +88,8 @@ export const SectorBreakdown = ({ data, isLoading }: SectorBreakdownProps) => {
         {/* Header */}
         <div className="flex items-start justify-between mb-6">
           <div>
-            <h3 className="font-display font-semibold text-lg text-foreground">Sector Distribution</h3>
-            <p className="text-sm text-muted-foreground">Where the money is flowing ({selectedYear})</p>
+            <h3 className="font-display font-semibold text-lg text-foreground">{t.sectorDistribution}</h3>
+            <p className="text-sm text-muted-foreground">{t.whereMoneyFlowing} ({selectedYear})</p>
           </div>
           <div className="flex items-center gap-2">
             <Select value={selectedYear} onValueChange={setSelectedYear}>
@@ -163,7 +167,7 @@ export const SectorBreakdown = ({ data, isLoading }: SectorBreakdownProps) => {
               {/* Center Label */}
               <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
                 <span className="text-3xl font-bold text-foreground">{selectedYear}</span>
-                <span className="text-xs text-muted-foreground uppercase tracking-wider font-medium">Focus</span>
+                <span className="text-xs text-muted-foreground uppercase tracking-wider font-medium">{t.focus}</span>
               </div>
             </div>
             
@@ -203,7 +207,7 @@ export const SectorBreakdown = ({ data, isLoading }: SectorBreakdownProps) => {
                         <div className="flex items-center gap-3 mt-1 text-xs text-muted-foreground animate-fade-in">
                           <span>${item.value}M</span>
                           <span>•</span>
-                          <span>{item.deals} deals</span>
+                          <span>{item.deals} {t.deals}</span>
                         </div>
                       )}
                     </div>

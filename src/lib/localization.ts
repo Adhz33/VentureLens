@@ -145,6 +145,12 @@ export interface UITranslations {
   monthlyTrend: string;
   sectorSummary: string;
   selectAtLeastTwo: string;
+  selectSectorsPrompt: string;
+  monthlyTrends: string;
+  totalFundingTab: string;
+  dealAnalysis: string;
+  totalDeals: string;
+  avgDealSize: string;
   
   // Charts
   fundingTrends: string;
@@ -152,6 +158,38 @@ export interface UITranslations {
   sectorBreakdown: string;
   fundingByRound: string;
   sectorAnalysis: string;
+  sectorDistribution: string;
+  whereMoneyFlowing: string;
+  deals: string;
+  focus: string;
+  
+  // Funding Comparison
+  fundingComparison: string;
+  vsPreviousPeriod: string;
+  weekly: string;
+  monthly: string;
+  quarterly: string;
+  thisWeek: string;
+  lastWeek: string;
+  
+  // Knowledge Base
+  knowledgeBaseTitle: string;
+  ragContextData: string;
+  activeDocuments: string;
+  sourceGrounded: string;
+  strictRetrieval: string;
+  docs: string;
+  noDocumentsUploaded: string;
+  noDocumentsMatch: string;
+  uploading: string;
+  documentUploaded: string;
+  processingForRag: string;
+  processingStarted: string;
+  documentReady: string;
+  documentDeleted: string;
+  deleteFailed: string;
+  uploadFailed: string;
+  chunks: string;
 }
 
 const baseTranslations: UITranslations = {
@@ -293,17 +331,55 @@ const baseTranslations: UITranslations = {
   
   // Sector Comparison
   sectorComparison: 'Sector Comparison',
-  selectSectorsToCompare: 'Select up to 5 sectors to compare',
+  selectSectorsToCompare: 'Select up to 5 sectors to compare:',
   monthlyTrend: 'Monthly Trend',
   sectorSummary: 'Sector Summary',
   selectAtLeastTwo: 'Select at least 2 sectors to compare',
+  selectSectorsPrompt: 'Select sectors above to compare funding trends',
+  monthlyTrends: 'Monthly Trends',
+  totalFundingTab: 'Total Funding',
+  dealAnalysis: 'Deal Analysis',
+  totalDeals: 'Total Deals',
+  avgDealSize: 'Avg Deal Size',
   
   // Charts
   fundingTrends: 'Funding Trends',
-  monthlyFundingTrends: 'Monthly Funding Trends',
+  monthlyFundingTrends: 'Monthly investment flow in $M',
   sectorBreakdown: 'Sector Breakdown',
   fundingByRound: 'Funding by Round',
   sectorAnalysis: 'Sector Analysis',
+  sectorDistribution: 'Sector Distribution',
+  whereMoneyFlowing: 'Where the money is flowing',
+  deals: 'deals',
+  focus: 'Focus',
+  
+  // Funding Comparison
+  fundingComparison: 'Funding Comparison',
+  vsPreviousPeriod: 'vs previous period',
+  weekly: 'Weekly',
+  monthly: 'Monthly',
+  quarterly: 'Quarterly',
+  thisWeek: 'This Week',
+  lastWeek: 'Last Week',
+  
+  // Knowledge Base
+  knowledgeBaseTitle: 'Knowledge Base',
+  ragContextData: 'RAG Context Data',
+  activeDocuments: 'Active Documents',
+  sourceGrounded: 'Source Grounded',
+  strictRetrieval: 'Strict retrieval from these files.',
+  docs: 'Docs',
+  noDocumentsUploaded: 'No documents uploaded yet',
+  noDocumentsMatch: 'No documents match your search',
+  uploading: 'Uploading...',
+  documentUploaded: 'Document uploaded',
+  processingForRag: 'Processing document for RAG...',
+  processingStarted: 'Processing started',
+  documentReady: 'Document will be ready shortly',
+  documentDeleted: 'Document deleted',
+  deleteFailed: 'Delete failed',
+  uploadFailed: 'Upload failed',
+  chunks: 'chunks',
 };
 
 export const translations: Record<LanguageCode, UITranslations> = {
@@ -448,17 +524,55 @@ export const translations: Record<LanguageCode, UITranslations> = {
     
     // Sector Comparison
     sectorComparison: 'क्षेत्र तुलना',
-    selectSectorsToCompare: 'तुलना करने के लिए 5 क्षेत्रों तक का चयन करें',
+    selectSectorsToCompare: 'तुलना करने के लिए 5 क्षेत्रों तक का चयन करें:',
     monthlyTrend: 'मासिक रुझान',
     sectorSummary: 'क्षेत्र सारांश',
     selectAtLeastTwo: 'तुलना करने के लिए कम से कम 2 क्षेत्रों का चयन करें',
+    selectSectorsPrompt: 'फंडिंग रुझानों की तुलना करने के लिए ऊपर क्षेत्रों का चयन करें',
+    monthlyTrends: 'मासिक रुझान',
+    totalFundingTab: 'कुल फंडिंग',
+    dealAnalysis: 'सौदा विश्लेषण',
+    totalDeals: 'कुल सौदे',
+    avgDealSize: 'औसत सौदा आकार',
     
     // Charts
     fundingTrends: 'फंडिंग रुझान',
-    monthlyFundingTrends: 'मासिक फंडिंग रुझान',
+    monthlyFundingTrends: '$M में मासिक निवेश प्रवाह',
     sectorBreakdown: 'क्षेत्र विभाजन',
     fundingByRound: 'राउंड द्वारा फंडिंग',
     sectorAnalysis: 'क्षेत्र विश्लेषण',
+    sectorDistribution: 'क्षेत्र वितरण',
+    whereMoneyFlowing: 'पैसा कहाँ जा रहा है',
+    deals: 'सौदे',
+    focus: 'फोकस',
+    
+    // Funding Comparison
+    fundingComparison: 'फंडिंग तुलना',
+    vsPreviousPeriod: 'पिछली अवधि की तुलना में',
+    weekly: 'साप्ताहिक',
+    monthly: 'मासिक',
+    quarterly: 'तिमाही',
+    thisWeek: 'इस सप्ताह',
+    lastWeek: 'पिछला सप्ताह',
+    
+    // Knowledge Base
+    knowledgeBaseTitle: 'ज्ञान आधार',
+    ragContextData: 'RAG संदर्भ डेटा',
+    activeDocuments: 'सक्रिय दस्तावेज़',
+    sourceGrounded: 'स्रोत आधारित',
+    strictRetrieval: 'इन फ़ाइलों से सख्त पुनर्प्राप्ति।',
+    docs: 'दस्तावेज़',
+    noDocumentsUploaded: 'अभी तक कोई दस्तावेज़ अपलोड नहीं किया गया',
+    noDocumentsMatch: 'कोई दस्तावेज़ आपकी खोज से मेल नहीं खाता',
+    uploading: 'अपलोड हो रहा है...',
+    documentUploaded: 'दस्तावेज़ अपलोड हुआ',
+    processingForRag: 'RAG के लिए दस्तावेज़ प्रोसेस हो रहा है...',
+    processingStarted: 'प्रोसेसिंग शुरू',
+    documentReady: 'दस्तावेज़ जल्द ही तैयार होगा',
+    documentDeleted: 'दस्तावेज़ हटाया गया',
+    deleteFailed: 'हटाने में विफल',
+    uploadFailed: 'अपलोड विफल',
+    chunks: 'चंक्स',
   },
   ta: {
     ...baseTranslations,

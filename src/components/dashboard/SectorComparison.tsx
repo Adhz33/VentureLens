@@ -3,8 +3,10 @@ import { Card } from '@/components/ui/card';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Label } from '@/components/ui/label';
 import { BarChart, Bar, XAxis, YAxis, Tooltip, Legend, ResponsiveContainer, LineChart, Line } from 'recharts';
-import { TrendingUp, BarChart3 } from 'lucide-react';
+import { BarChart3 } from 'lucide-react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { LanguageCode } from '@/lib/constants';
+import { translations } from '@/lib/localization';
 
 interface FundingRecord {
   id: string;
@@ -20,6 +22,7 @@ interface FundingRecord {
 interface SectorComparisonProps {
   data?: FundingRecord[];
   isLoading?: boolean;
+  selectedLanguage?: LanguageCode;
 }
 
 const SECTOR_COLORS: Record<string, string> = {
@@ -33,8 +36,9 @@ const SECTOR_COLORS: Record<string, string> = {
   'Others': 'hsl(215, 20%, 55%)',
 };
 
-export const SectorComparison = ({ data = [], isLoading }: SectorComparisonProps) => {
+export const SectorComparison = ({ data = [], isLoading, selectedLanguage = 'en' }: SectorComparisonProps) => {
   const [selectedSectors, setSelectedSectors] = useState<string[]>([]);
+  const t = translations[selectedLanguage];
 
   const availableSectors = useMemo(() => {
     const sectors = new Set<string>();
@@ -126,11 +130,11 @@ export const SectorComparison = ({ data = [], isLoading }: SectorComparisonProps
     <Card className="p-6 bg-card border-border">
       <div className="flex items-center gap-2 mb-6">
         <BarChart3 className="w-5 h-5 text-primary" />
-        <h3 className="text-lg font-semibold text-foreground">Sector Comparison</h3>
+        <h3 className="text-lg font-semibold text-foreground">{t.sectorComparison}</h3>
       </div>
 
       <div className="mb-6">
-        <p className="text-sm text-muted-foreground mb-3">Select up to 5 sectors to compare:</p>
+        <p className="text-sm text-muted-foreground mb-3">{t.selectSectorsToCompare}</p>
         <div className="flex flex-wrap gap-3">
           {availableSectors.map(sector => (
             <div key={sector} className="flex items-center space-x-2">
@@ -154,14 +158,14 @@ export const SectorComparison = ({ data = [], isLoading }: SectorComparisonProps
 
       {selectedSectors.length === 0 ? (
         <div className="h-64 flex items-center justify-center text-muted-foreground">
-          Select sectors above to compare funding trends
+          {t.selectSectorsPrompt}
         </div>
       ) : (
         <Tabs defaultValue="trends" className="space-y-4">
           <TabsList className="grid w-full grid-cols-3">
-            <TabsTrigger value="trends">Monthly Trends</TabsTrigger>
-            <TabsTrigger value="total">Total Funding</TabsTrigger>
-            <TabsTrigger value="deals">Deal Analysis</TabsTrigger>
+            <TabsTrigger value="trends">{t.monthlyTrends}</TabsTrigger>
+            <TabsTrigger value="total">{t.totalFundingTab}</TabsTrigger>
+            <TabsTrigger value="deals">{t.dealAnalysis}</TabsTrigger>
           </TabsList>
 
           <TabsContent value="trends" className="h-72">
@@ -203,7 +207,7 @@ export const SectorComparison = ({ data = [], isLoading }: SectorComparisonProps
                     border: '1px solid hsl(var(--border))',
                     borderRadius: '8px',
                   }}
-                  formatter={(value: number) => [`$${value.toFixed(2)}M`, 'Total Funding']}
+                  formatter={(value: number) => [`$${value.toFixed(2)}M`, t.totalFunding]}
                 />
                 <Bar dataKey="totalFunding" radius={[0, 4, 4, 0]}>
                   {comparisonData.summary.map((entry, index) => (
@@ -227,15 +231,15 @@ export const SectorComparison = ({ data = [], isLoading }: SectorComparisonProps
                   </div>
                   <div className="space-y-2 text-sm">
                     <div className="flex justify-between">
-                      <span className="text-muted-foreground">Total Deals</span>
+                      <span className="text-muted-foreground">{t.totalDeals}</span>
                       <span className="font-medium text-foreground">{sector.dealCount}</span>
                     </div>
                     <div className="flex justify-between">
-                      <span className="text-muted-foreground">Total Funding</span>
+                      <span className="text-muted-foreground">{t.totalFunding}</span>
                       <span className="font-medium text-foreground">${sector.totalFunding.toFixed(2)}M</span>
                     </div>
                     <div className="flex justify-between">
-                      <span className="text-muted-foreground">Avg Deal Size</span>
+                      <span className="text-muted-foreground">{t.avgDealSize}</span>
                       <span className="font-medium text-foreground">${sector.avgDealSize.toFixed(2)}M</span>
                     </div>
                   </div>
