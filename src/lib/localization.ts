@@ -3,9 +3,96 @@ import { LanguageCode } from './constants';
 export type SearchMode = 'documents' | 'web' | 'combined';
 
 export interface UITranslations {
-  // Header
+  // Header & Navigation
   intelligentQuery: string;
   queryDescription: string;
+  
+  // Sidebar Menu
+  menu: string;
+  askFundingIQ: string;
+  marketInsights: string;
+  findInvestors: string;
+  governmentSchemes: string;
+  dataSources: string;
+  knowledgeBase: string;
+  startupIntelligence: string;
+  poweredByRag: string;
+  retrievalAugmented: string;
+  
+  // Dashboard
+  fundingDashboard: string;
+  dashboardSubtitle: string;
+  totalFunding: string;
+  uniqueInvestors: string;
+  fundedStartups: string;
+  dataSourcesCount: string;
+  dealsInPeriod: string;
+  activeInPeriod: string;
+  inSelectedRange: string;
+  newSourcesAdded: string;
+  
+  // Investors Section
+  topInvestors: string;
+  investorsDescription: string;
+  totalInvested: string;
+  focusAreas: string;
+  notableInvestments: string;
+  
+  // Policies Section
+  governmentPolicies: string;
+  policiesDescription: string;
+  deadline: string;
+  learnMore: string;
+  
+  // Data Sources
+  dataSourcesTitle: string;
+  dataSourcesDescription: string;
+  addCustomSource: string;
+  enterUrlPlaceholder: string;
+  addSource: string;
+  ingestedSources: string;
+  sourcesReady: string;
+  dataIngested: string;
+  contentScraped: string;
+  ingestionFailed: string;
+  failedToScrape: string;
+  
+  // Export Panel
+  export: string;
+  downloadCsv: string;
+  generatePdfReport: string;
+  exportedRecords: string;
+  noDataToExport: string;
+  exportFailed: string;
+  
+  // Date Range Filter
+  quickSelect: string;
+  last7Days: string;
+  last30Days: string;
+  last3Months: string;
+  last6Months: string;
+  thisYear: string;
+  lastYear: string;
+  allTime: string;
+  
+  // Knowledge Base Panel
+  ragKnowledgeBase: string;
+  manageDocuments: string;
+  newConversation: string;
+  uploadDocument: string;
+  searchDocuments: string;
+  totalDocuments: string;
+  documentsReady: string;
+  processing: string;
+  failed: string;
+  
+  // Crawl Scheduler
+  automatedDataCrawler: string;
+  lastRun: string;
+  nextScheduledRun: string;
+  runNow: string;
+  running: string;
+  configuredSources: string;
   
   // Search modes
   searchMode: string;
@@ -47,43 +134,274 @@ export interface UITranslations {
   
   // Buttons
   send: string;
+  
+  // Footer
+  footerTagline: string;
+  builtWith: string;
+  
+  // Sector Comparison
+  sectorComparison: string;
+  selectSectorsToCompare: string;
+  monthlyTrend: string;
+  sectorSummary: string;
+  selectAtLeastTwo: string;
+  
+  // Charts
+  fundingTrends: string;
+  monthlyFundingTrends: string;
+  sectorBreakdown: string;
+  fundingByRound: string;
+  sectorAnalysis: string;
 }
 
+const baseTranslations: UITranslations = {
+  // Header & Navigation
+  intelligentQuery: 'Intelligent',
+  queryDescription: 'Ask questions about startup funding in your preferred language. Get grounded insights backed by real data sources.',
+  
+  // Sidebar Menu
+  menu: 'Menu',
+  askFundingIQ: 'Ask FundingIQ',
+  marketInsights: 'Market Insights',
+  findInvestors: 'Find Investors',
+  governmentSchemes: 'Government Schemes',
+  dataSources: 'Data Sources',
+  knowledgeBase: 'Knowledge Base',
+  startupIntelligence: 'Startup Intelligence',
+  poweredByRag: 'Powered by RAG',
+  retrievalAugmented: 'Retrieval Augmented GenAI',
+  
+  // Dashboard
+  fundingDashboard: 'Funding Dashboard',
+  dashboardSubtitle: 'Real-time insights into startup ecosystem funding activity',
+  totalFunding: 'Total Funding',
+  uniqueInvestors: 'Unique Investors',
+  fundedStartups: 'Funded Startups',
+  dataSourcesCount: 'Data Sources',
+  dealsInPeriod: 'deals in period',
+  activeInPeriod: 'Active in period',
+  inSelectedRange: 'In selected range',
+  newSourcesAdded: 'new sources added',
+  
+  // Investors Section
+  topInvestors: 'Top Investors',
+  investorsDescription: 'Leading venture capital and private equity firms active in the Indian startup ecosystem',
+  totalInvested: 'total invested',
+  focusAreas: 'Focus Areas',
+  notableInvestments: 'Notable Investments',
+  
+  // Policies Section
+  governmentPolicies: 'Government Policies',
+  policiesDescription: 'Schemes and initiatives supporting startups and entrepreneurs',
+  deadline: 'Deadline',
+  learnMore: 'Learn More',
+  
+  // Data Sources
+  dataSourcesTitle: 'Data Sources',
+  dataSourcesDescription: 'Ingest and manage data from web sources, PDFs, and reports to build your knowledge base.',
+  addCustomSource: 'Add Custom Source',
+  enterUrlPlaceholder: 'Enter URL to scrape (e.g., https://inc42.com/article)',
+  addSource: 'Add Source',
+  ingestedSources: 'Ingested Sources',
+  sourcesReady: 'sources ready',
+  dataIngested: 'Data Ingested',
+  contentScraped: 'Content has been scraped and processed successfully.',
+  ingestionFailed: 'Ingestion Failed',
+  failedToScrape: 'Failed to scrape and process the URL.',
+  
+  // Export Panel
+  export: 'Export',
+  downloadCsv: 'Download CSV',
+  generatePdfReport: 'Generate PDF Report',
+  exportedRecords: 'Exported records',
+  noDataToExport: 'No funding data available to export',
+  exportFailed: 'Failed to export',
+  
+  // Date Range Filter
+  quickSelect: 'Quick Select',
+  last7Days: 'Last 7 days',
+  last30Days: 'Last 30 days',
+  last3Months: 'Last 3 months',
+  last6Months: 'Last 6 months',
+  thisYear: 'This year',
+  lastYear: 'Last year',
+  allTime: 'All time',
+  
+  // Knowledge Base Panel
+  ragKnowledgeBase: 'RAG Knowledge Base',
+  manageDocuments: 'Manage documents for context-aware responses',
+  newConversation: 'New Conversation',
+  uploadDocument: 'Upload',
+  searchDocuments: 'Search documents...',
+  totalDocuments: 'Total Documents',
+  documentsReady: 'documents ready for RAG',
+  processing: 'Processing',
+  failed: 'Failed',
+  
+  // Crawl Scheduler
+  automatedDataCrawler: 'Automated Data Crawler',
+  lastRun: 'Last run',
+  nextScheduledRun: 'Next scheduled run',
+  runNow: 'Run Now',
+  running: 'Running...',
+  configuredSources: 'Configured Sources',
+  
+  // Search modes
+  searchMode: 'Search Mode',
+  documentsOnly: 'Documents Only',
+  webOnly: 'Web Only',
+  combined: 'Combined',
+  documentsOnlyDesc: 'Search only uploaded documents',
+  webOnlyDesc: 'Search only the web',
+  combinedDesc: 'Search documents first, then web',
+  
+  // Chat interface
+  startExploring: 'Start Exploring',
+  askAnyQuestion: 'Ask any question about startup funding, investors, or government policies',
+  askPlaceholder: 'Ask your question here...',
+  clearConversation: 'Clear conversation',
+  
+  // Loading states
+  searchingKnowledgeBase: 'Searching knowledge base...',
+  searchingWeb: 'Searching the web...',
+  
+  // Web search prompt
+  documentsNoInfo: "Documents don't have the specific information you asked for.",
+  wouldYouLikeWebSearch: 'Would you like to search the web for more up-to-date information?',
+  searchTheWeb: 'Search the Web',
+  searching: 'Searching...',
+  
+  // Sources
+  fromKnowledgeBase: 'From Knowledge Base:',
+  webSources: 'Web Sources:',
+  
+  // Errors
+  errorTitle: 'Error',
+  rateLimitError: 'Rate limit exceeded. Please try again in a moment.',
+  creditsExhausted: 'AI credits exhausted. Please add credits to continue.',
+  failedToProcess: 'Failed to process your query. Please try again.',
+  webSearchFailed: 'Could not perform web search.',
+  webSearchComplete: 'Web Search Complete',
+  foundInfoFromWeb: 'Found information from the web!',
+  
+  // Buttons
+  send: 'Send',
+  
+  // Footer
+  footerTagline: 'Multilingual RAG-based Startup Funding Intelligence System',
+  builtWith: 'Built with ❤️',
+  
+  // Sector Comparison
+  sectorComparison: 'Sector Comparison',
+  selectSectorsToCompare: 'Select up to 5 sectors to compare',
+  monthlyTrend: 'Monthly Trend',
+  sectorSummary: 'Sector Summary',
+  selectAtLeastTwo: 'Select at least 2 sectors to compare',
+  
+  // Charts
+  fundingTrends: 'Funding Trends',
+  monthlyFundingTrends: 'Monthly Funding Trends',
+  sectorBreakdown: 'Sector Breakdown',
+  fundingByRound: 'Funding by Round',
+  sectorAnalysis: 'Sector Analysis',
+};
+
 export const translations: Record<LanguageCode, UITranslations> = {
-  en: {
-    intelligentQuery: 'Intelligent',
-    queryDescription: 'Ask questions about startup funding in your preferred language. Get grounded insights backed by real data sources.',
-    searchMode: 'Search Mode',
-    documentsOnly: 'Documents Only',
-    webOnly: 'Web Only',
-    combined: 'Combined',
-    documentsOnlyDesc: 'Search only uploaded documents',
-    webOnlyDesc: 'Search only the web',
-    combinedDesc: 'Search documents first, then web',
-    startExploring: 'Start Exploring',
-    askAnyQuestion: 'Ask any question about startup funding, investors, or government policies',
-    askPlaceholder: 'Ask your question here...',
-    clearConversation: 'Clear conversation',
-    searchingKnowledgeBase: 'Searching knowledge base...',
-    searchingWeb: 'Searching the web...',
-    documentsNoInfo: "Documents don't have the specific information you asked for.",
-    wouldYouLikeWebSearch: 'Would you like to search the web for more up-to-date information?',
-    searchTheWeb: 'Search the Web',
-    searching: 'Searching...',
-    fromKnowledgeBase: 'From Knowledge Base:',
-    webSources: 'Web Sources:',
-    errorTitle: 'Error',
-    rateLimitError: 'Rate limit exceeded. Please try again in a moment.',
-    creditsExhausted: 'AI credits exhausted. Please add credits to continue.',
-    failedToProcess: 'Failed to process your query. Please try again.',
-    webSearchFailed: 'Could not perform web search.',
-    webSearchComplete: 'Web Search Complete',
-    foundInfoFromWeb: 'Found information from the web!',
-    send: 'Send',
-  },
+  en: { ...baseTranslations },
   hi: {
+    ...baseTranslations,
+    // Header & Navigation
     intelligentQuery: 'बुद्धिमान',
     queryDescription: 'अपनी पसंदीदा भाषा में स्टार्टअप फंडिंग के बारे में सवाल पूछें। वास्तविक डेटा स्रोतों पर आधारित अंतर्दृष्टि प्राप्त करें।',
+    
+    // Sidebar Menu
+    menu: 'मेनू',
+    askFundingIQ: 'FundingIQ से पूछें',
+    marketInsights: 'बाजार अंतर्दृष्टि',
+    findInvestors: 'निवेशक खोजें',
+    governmentSchemes: 'सरकारी योजनाएं',
+    dataSources: 'डेटा स्रोत',
+    knowledgeBase: 'ज्ञान आधार',
+    startupIntelligence: 'स्टार्टअप इंटेलिजेंस',
+    poweredByRag: 'RAG द्वारा संचालित',
+    retrievalAugmented: 'रिट्रीवल ऑगमेंटेड GenAI',
+    
+    // Dashboard
+    fundingDashboard: 'फंडिंग डैशबोर्ड',
+    dashboardSubtitle: 'स्टार्टअप इकोसिस्टम फंडिंग गतिविधि में रियल-टाइम अंतर्दृष्टि',
+    totalFunding: 'कुल फंडिंग',
+    uniqueInvestors: 'अद्वितीय निवेशक',
+    fundedStartups: 'फंडेड स्टार्टअप्स',
+    dataSourcesCount: 'डेटा स्रोत',
+    dealsInPeriod: 'अवधि में सौदे',
+    activeInPeriod: 'अवधि में सक्रिय',
+    inSelectedRange: 'चयनित सीमा में',
+    newSourcesAdded: 'नए स्रोत जोड़े गए',
+    
+    // Investors Section
+    topInvestors: 'शीर्ष निवेशक',
+    investorsDescription: 'भारतीय स्टार्टअप इकोसिस्टम में सक्रिय प्रमुख वेंचर कैपिटल और प्राइवेट इक्विटी फर्म',
+    totalInvested: 'कुल निवेश',
+    focusAreas: 'फोकस क्षेत्र',
+    notableInvestments: 'उल्लेखनीय निवेश',
+    
+    // Policies Section
+    governmentPolicies: 'सरकारी नीतियां',
+    policiesDescription: 'स्टार्टअप और उद्यमियों का समर्थन करने वाली योजनाएं और पहल',
+    deadline: 'समय सीमा',
+    learnMore: 'और जानें',
+    
+    // Data Sources
+    dataSourcesTitle: 'डेटा स्रोत',
+    dataSourcesDescription: 'अपने ज्ञान आधार को बनाने के लिए वेब स्रोतों, PDF और रिपोर्ट से डेटा को इंजेस्ट और प्रबंधित करें।',
+    addCustomSource: 'कस्टम स्रोत जोड़ें',
+    enterUrlPlaceholder: 'स्क्रैप करने के लिए URL दर्ज करें',
+    addSource: 'स्रोत जोड़ें',
+    ingestedSources: 'इंजेस्टेड स्रोत',
+    sourcesReady: 'स्रोत तैयार',
+    dataIngested: 'डेटा इंजेस्ट हुआ',
+    contentScraped: 'सामग्री को सफलतापूर्वक स्क्रैप और प्रोसेस किया गया।',
+    ingestionFailed: 'इंजेशन विफल',
+    failedToScrape: 'URL को स्क्रैप और प्रोसेस करने में विफल।',
+    
+    // Export Panel
+    export: 'निर्यात',
+    downloadCsv: 'CSV डाउनलोड करें',
+    generatePdfReport: 'PDF रिपोर्ट बनाएं',
+    exportedRecords: 'निर्यातित रिकॉर्ड',
+    noDataToExport: 'निर्यात के लिए कोई फंडिंग डेटा उपलब्ध नहीं',
+    exportFailed: 'निर्यात विफल',
+    
+    // Date Range Filter
+    quickSelect: 'त्वरित चयन',
+    last7Days: 'पिछले 7 दिन',
+    last30Days: 'पिछले 30 दिन',
+    last3Months: 'पिछले 3 महीने',
+    last6Months: 'पिछले 6 महीने',
+    thisYear: 'इस साल',
+    lastYear: 'पिछला साल',
+    allTime: 'सभी समय',
+    
+    // Knowledge Base Panel
+    ragKnowledgeBase: 'RAG ज्ञान आधार',
+    manageDocuments: 'संदर्भ-जागरूक प्रतिक्रियाओं के लिए दस्तावेज़ प्रबंधित करें',
+    newConversation: 'नई बातचीत',
+    uploadDocument: 'अपलोड',
+    searchDocuments: 'दस्तावेज़ खोजें...',
+    totalDocuments: 'कुल दस्तावेज़',
+    documentsReady: 'RAG के लिए दस्तावेज़ तैयार',
+    processing: 'प्रोसेसिंग',
+    failed: 'विफल',
+    
+    // Crawl Scheduler
+    automatedDataCrawler: 'स्वचालित डेटा क्रॉलर',
+    lastRun: 'अंतिम रन',
+    nextScheduledRun: 'अगला निर्धारित रन',
+    runNow: 'अभी चलाएं',
+    running: 'चल रहा है...',
+    configuredSources: 'कॉन्फ़िगर किए गए स्रोत',
+    
+    // Search modes
     searchMode: 'खोज मोड',
     documentsOnly: 'केवल दस्तावेज़',
     webOnly: 'केवल वेब',
@@ -91,18 +409,28 @@ export const translations: Record<LanguageCode, UITranslations> = {
     documentsOnlyDesc: 'केवल अपलोड किए गए दस्तावेज़ों में खोजें',
     webOnlyDesc: 'केवल वेब पर खोजें',
     combinedDesc: 'पहले दस्तावेज़ों में, फिर वेब पर खोजें',
+    
+    // Chat interface
     startExploring: 'खोज शुरू करें',
     askAnyQuestion: 'स्टार्टअप फंडिंग, निवेशकों, या सरकारी नीतियों के बारे में कोई भी प्रश्न पूछें',
     askPlaceholder: 'अपना प्रश्न यहाँ पूछें...',
     clearConversation: 'वार्तालाप साफ़ करें',
+    
+    // Loading states
     searchingKnowledgeBase: 'ज्ञान आधार खोज रहा है...',
     searchingWeb: 'वेब पर खोज रहा है...',
+    
+    // Web search prompt
     documentsNoInfo: 'दस्तावेज़ों में आपके द्वारा पूछी गई विशिष्ट जानकारी नहीं है।',
     wouldYouLikeWebSearch: 'क्या आप अधिक अद्यतित जानकारी के लिए वेब पर खोजना चाहेंगे?',
     searchTheWeb: 'वेब पर खोजें',
     searching: 'खोज रहा है...',
+    
+    // Sources
     fromKnowledgeBase: 'ज्ञान आधार से:',
     webSources: 'वेब स्रोत:',
+    
+    // Errors
     errorTitle: 'त्रुटि',
     rateLimitError: 'दर सीमा पार हो गई। कृपया थोड़ी देर बाद पुनः प्रयास करें।',
     creditsExhausted: 'AI क्रेडिट समाप्त। जारी रखने के लिए कृपया क्रेडिट जोड़ें।',
@@ -110,11 +438,87 @@ export const translations: Record<LanguageCode, UITranslations> = {
     webSearchFailed: 'वेब खोज नहीं कर सका।',
     webSearchComplete: 'वेब खोज पूर्ण',
     foundInfoFromWeb: 'वेब से जानकारी मिली!',
+    
+    // Buttons
     send: 'भेजें',
+    
+    // Footer
+    footerTagline: 'बहुभाषी RAG-आधारित स्टार्टअप फंडिंग इंटेलिजेंस सिस्टम',
+    builtWith: '❤️ के साथ बनाया गया',
+    
+    // Sector Comparison
+    sectorComparison: 'क्षेत्र तुलना',
+    selectSectorsToCompare: 'तुलना करने के लिए 5 क्षेत्रों तक का चयन करें',
+    monthlyTrend: 'मासिक रुझान',
+    sectorSummary: 'क्षेत्र सारांश',
+    selectAtLeastTwo: 'तुलना करने के लिए कम से कम 2 क्षेत्रों का चयन करें',
+    
+    // Charts
+    fundingTrends: 'फंडिंग रुझान',
+    monthlyFundingTrends: 'मासिक फंडिंग रुझान',
+    sectorBreakdown: 'क्षेत्र विभाजन',
+    fundingByRound: 'राउंड द्वारा फंडिंग',
+    sectorAnalysis: 'क्षेत्र विश्लेषण',
   },
   ta: {
+    ...baseTranslations,
+    // Header & Navigation
     intelligentQuery: 'புத்திசாலி',
-    queryDescription: 'உங்கள் விருப்பமான மொழியில் ஸ்டார்ட்அப் நிதியுதவி பற்றி கேள்விகளைக் கேளுங்கள். உண்மையான தரவு மூலங்களால் ஆதரிக்கப்படும் நுண்ணறிவுகளைப் பெறுங்கள்.',
+    queryDescription: 'உங்கள் விருப்பமான மொழியில் ஸ்டார்ட்அப் நிதியுதவி பற்றி கேள்விகளைக் கேளுங்கள்.',
+    
+    // Sidebar Menu
+    menu: 'மெனு',
+    askFundingIQ: 'FundingIQ கேளுங்கள்',
+    marketInsights: 'சந்தை நுண்ணறிவு',
+    findInvestors: 'முதலீட்டாளர்களைக் கண்டறியுங்கள்',
+    governmentSchemes: 'அரசு திட்டங்கள்',
+    dataSources: 'தரவு மூலங்கள்',
+    knowledgeBase: 'அறிவுத்தளம்',
+    startupIntelligence: 'ஸ்டார்ட்அப் இன்டெலிஜென்ஸ்',
+    poweredByRag: 'RAG மூலம் இயக்கப்படுகிறது',
+    retrievalAugmented: 'ரிட்ரீவல் ஆக்மென்டட் GenAI',
+    
+    // Dashboard
+    fundingDashboard: 'நிதியுதவி டாஷ்போர்ட்',
+    dashboardSubtitle: 'ஸ்டார்ட்அப் சுற்றுச்சூழல் நிதியுதவி செயல்பாட்டில் நிகழ்நேர நுண்ணறிவு',
+    totalFunding: 'மொத்த நிதியுதவி',
+    uniqueInvestors: 'தனித்துவ முதலீட்டாளர்கள்',
+    fundedStartups: 'நிதியுதவி பெற்ற ஸ்டார்ட்அப்கள்',
+    dataSourcesCount: 'தரவு மூலங்கள்',
+    dealsInPeriod: 'காலகட்டத்தில் ஒப்பந்தங்கள்',
+    activeInPeriod: 'காலகட்டத்தில் செயலில்',
+    inSelectedRange: 'தேர்ந்தெடுக்கப்பட்ட வரம்பில்',
+    newSourcesAdded: 'புதிய மூலங்கள் சேர்க்கப்பட்டன',
+    
+    // Investors Section
+    topInvestors: 'சிறந்த முதலீட்டாளர்கள்',
+    investorsDescription: 'இந்திய ஸ்டார்ட்அப் சுற்றுச்சூழலில் செயல்படும் முன்னணி வென்ச்சர் கேபிடல் மற்றும் பிரைவேட் ஈக்விட்டி நிறுவனங்கள்',
+    totalInvested: 'மொத்த முதலீடு',
+    focusAreas: 'கவன பகுதிகள்',
+    notableInvestments: 'குறிப்பிடத்தக்க முதலீடுகள்',
+    
+    // Policies Section
+    governmentPolicies: 'அரசு கொள்கைகள்',
+    policiesDescription: 'ஸ்டார்ட்அப்கள் மற்றும் தொழில்முனைவோரை ஆதரிக்கும் திட்டங்கள் மற்றும் முயற்சிகள்',
+    deadline: 'காலக்கெடு',
+    learnMore: 'மேலும் அறிக',
+    
+    // Export Panel
+    export: 'ஏற்றுமதி',
+    downloadCsv: 'CSV பதிவிறக்கம்',
+    generatePdfReport: 'PDF அறிக்கை உருவாக்கு',
+    
+    // Date Range Filter
+    quickSelect: 'விரைவு தேர்வு',
+    last7Days: 'கடந்த 7 நாட்கள்',
+    last30Days: 'கடந்த 30 நாட்கள்',
+    last3Months: 'கடந்த 3 மாதங்கள்',
+    last6Months: 'கடந்த 6 மாதங்கள்',
+    thisYear: 'இந்த ஆண்டு',
+    lastYear: 'கடந்த ஆண்டு',
+    allTime: 'எல்லா நேரமும்',
+    
+    // Search modes
     searchMode: 'தேடல் முறை',
     documentsOnly: 'ஆவணங்கள் மட்டும்',
     webOnly: 'வெப் மட்டும்',
@@ -122,243 +526,310 @@ export const translations: Record<LanguageCode, UITranslations> = {
     documentsOnlyDesc: 'பதிவேற்றிய ஆவணங்களில் மட்டும் தேடுங்கள்',
     webOnlyDesc: 'வெப்பில் மட்டும் தேடுங்கள்',
     combinedDesc: 'முதலில் ஆவணங்கள், பின்னர் வெப்',
+    
+    // Chat interface
     startExploring: 'ஆராய்வைத் தொடங்குங்கள்',
     askAnyQuestion: 'ஸ்டார்ட்அப் நிதியுதவி, முதலீட்டாளர்கள் அல்லது அரசு கொள்கைகள் பற்றி எந்த கேள்வியும் கேளுங்கள்',
     askPlaceholder: 'உங்கள் கேள்வியை இங்கே கேளுங்கள்...',
     clearConversation: 'உரையாடலை அழி',
-    searchingKnowledgeBase: 'அறிவுத்தளத்தில் தேடுகிறது...',
-    searchingWeb: 'வெப்பில் தேடுகிறது...',
-    documentsNoInfo: 'நீங்கள் கேட்ட குறிப்பிட்ட தகவல் ஆவணங்களில் இல்லை.',
-    wouldYouLikeWebSearch: 'மேலும் புதுப்பித்த தகவலுக்கு வெப்பில் தேட விரும்புகிறீர்களா?',
-    searchTheWeb: 'வெப்பில் தேடுங்கள்',
-    searching: 'தேடுகிறது...',
-    fromKnowledgeBase: 'அறிவுத்தளத்திலிருந்து:',
-    webSources: 'வெப் மூலங்கள்:',
-    errorTitle: 'பிழை',
-    rateLimitError: 'வீத வரம்பு மீறப்பட்டது. சிறிது நேரம் கழித்து மீண்டும் முயற்சிக்கவும்.',
-    creditsExhausted: 'AI கிரெடிட்கள் தீர்ந்துவிட்டன. தொடர கிரெடிட்களைச் சேர்க்கவும்.',
-    failedToProcess: 'உங்கள் வினவலைச் செயலாக்க இயலவில்லை. மீண்டும் முயற்சிக்கவும்.',
-    webSearchFailed: 'வெப் தேடலைச் செய்ய முடியவில்லை.',
-    webSearchComplete: 'வெப் தேடல் முடிந்தது',
-    foundInfoFromWeb: 'வெப்பிலிருந்து தகவல் கிடைத்தது!',
+    
+    // Footer
+    footerTagline: 'பன்மொழி RAG-அடிப்படையிலான ஸ்டார்ட்அப் நிதியுதவி இன்டெலிஜென்ஸ் சிஸ்டம்',
+    builtWith: '❤️ உடன் உருவாக்கப்பட்டது',
+    
+    // Buttons
     send: 'அனுப்பு',
+    
+    // Sector Comparison
+    sectorComparison: 'துறை ஒப்பீடு',
+    selectSectorsToCompare: 'ஒப்பிட 5 துறைகள் வரை தேர்ந்தெடுக்கவும்',
+    selectAtLeastTwo: 'ஒப்பிட குறைந்தது 2 துறைகளைத் தேர்ந்தெடுக்கவும்',
   },
   te: {
+    ...baseTranslations,
+    // Header & Navigation
     intelligentQuery: 'తెలివైన',
-    queryDescription: 'మీ ఇష్టమైన భాషలో స్టార్టప్ ఫండింగ్ గురించి ప్రశ్నలు అడగండి. నిజమైన డేటా మూలాల ద్వారా ఆధారపడిన అంతర్దృష్టులను పొందండి.',
+    queryDescription: 'మీ ఇష్టమైన భాషలో స్టార్టప్ ఫండింగ్ గురించి ప్రశ్నలు అడగండి.',
+    
+    // Sidebar Menu
+    menu: 'మెను',
+    askFundingIQ: 'FundingIQ అడగండి',
+    marketInsights: 'మార్కెట్ అంతర్దృష్టులు',
+    findInvestors: 'పెట్టుబడిదారులను కనుగొనండి',
+    governmentSchemes: 'ప్రభుత్వ పథకాలు',
+    dataSources: 'డేటా మూలాలు',
+    knowledgeBase: 'నాలెడ్జ్ బేస్',
+    startupIntelligence: 'స్టార్టప్ ఇంటెలిజెన్స్',
+    poweredByRag: 'RAG ద్వారా ఆధారితం',
+    
+    // Dashboard
+    fundingDashboard: 'ఫండింగ్ డాష్‌బోర్డ్',
+    dashboardSubtitle: 'స్టార్టప్ ఇకోసిస్టమ్ ఫండింగ్ కార్యకలాపంలో రియల్-టైమ్ అంతర్దృష్టులు',
+    totalFunding: 'మొత్తం ఫండింగ్',
+    uniqueInvestors: 'ప్రత్యేక పెట్టుబడిదారులు',
+    fundedStartups: 'ఫండెడ్ స్టార్టప్‌లు',
+    
+    // Investors Section
+    topInvestors: 'టాప్ పెట్టుబడిదారులు',
+    investorsDescription: 'భారతీయ స్టార్టప్ ఇకోసిస్టమ్‌లో చురుకుగా ఉన్న ప్రముఖ వెంచర్ క్యాపిటల్ మరియు ప్రైవేట్ ఈక్విటీ సంస్థలు',
+    
+    // Policies Section
+    governmentPolicies: 'ప్రభుత్వ విధానాలు',
+    policiesDescription: 'స్టార్టప్‌లు మరియు వ్యవస్థాపకులకు మద్దతు ఇచ్చే పథకాలు మరియు కార్యక్రమాలు',
+    
+    // Search modes
     searchMode: 'శోధన మోడ్',
     documentsOnly: 'పత్రాలు మాత్రమే',
     webOnly: 'వెబ్ మాత్రమే',
     combined: 'కలిపిన',
-    documentsOnlyDesc: 'అప్‌లోడ్ చేసిన పత్రాలలో మాత్రమే శోధించండి',
-    webOnlyDesc: 'వెబ్‌లో మాత్రమే శోధించండి',
-    combinedDesc: 'ముందు పత్రాలు, తర్వాత వెబ్',
+    
+    // Chat interface
     startExploring: 'అన్వేషణ ప్రారంభించండి',
-    askAnyQuestion: 'స్టార్టప్ ఫండింగ్, పెట్టుబడిదారులు లేదా ప్రభుత్వ విధానాల గురించి ఏదైనా ప్రశ్న అడగండి',
     askPlaceholder: 'మీ ప్రశ్నను ఇక్కడ అడగండి...',
-    clearConversation: 'సంభాషణను క్లియర్ చేయండి',
-    searchingKnowledgeBase: 'నాలెడ్జ్ బేస్‌లో శోధిస్తోంది...',
-    searchingWeb: 'వెబ్‌లో శోధిస్తోంది...',
-    documentsNoInfo: 'మీరు అడిగిన నిర్దిష్ట సమాచారం పత్రాలలో లేదు.',
-    wouldYouLikeWebSearch: 'మరింత తాజా సమాచారం కోసం వెబ్‌లో శోధించాలనుకుంటున్నారా?',
-    searchTheWeb: 'వెబ్‌లో శోధించండి',
-    searching: 'శోధిస్తోంది...',
-    fromKnowledgeBase: 'నాలెడ్జ్ బేస్ నుండి:',
-    webSources: 'వెబ్ మూలాలు:',
-    errorTitle: 'లోపం',
-    rateLimitError: 'రేట్ పరిమితి మించిపోయింది. దయచేసి కొద్దిసేపట్లో మళ్ళీ ప్రయత్నించండి.',
-    creditsExhausted: 'AI క్రెడిట్లు అయిపోయాయి. కొనసాగించడానికి దయచేసి క్రెడిట్లు జోడించండి.',
-    failedToProcess: 'మీ ప్రశ్నను ప్రాసెస్ చేయడంలో విఫలమైంది. దయచేసి మళ్ళీ ప్రయత్నించండి.',
-    webSearchFailed: 'వెబ్ శోధన చేయలేకపోయింది.',
-    webSearchComplete: 'వెబ్ శోధన పూర్తయింది',
-    foundInfoFromWeb: 'వెబ్ నుండి సమాచారం కనుగొనబడింది!',
+    
+    // Footer
+    footerTagline: 'బహుభాషా RAG-ఆధారిత స్టార్టప్ ఫండింగ్ ఇంటెలిజెన్స్ సిస్టమ్',
     send: 'పంపండి',
+    
+    // Sector Comparison
+    sectorComparison: 'రంగ పోలిక',
+    selectSectorsToCompare: 'పోల్చడానికి 5 రంగాల వరకు ఎంచుకోండి',
   },
   bn: {
-    intelligentQuery: 'বুদ্ধিমান',
-    queryDescription: 'আপনার পছন্দের ভাষায় স্টার্টআপ ফান্ডিং সম্পর্কে প্রশ্ন জিজ্ঞাসা করুন। প্রকৃত ডেটা উৎস দ্বারা সমর্থিত অন্তর্দৃষ্টি পান।',
+    ...baseTranslations,
+    // Sidebar Menu
+    menu: 'মেনু',
+    askFundingIQ: 'FundingIQ জিজ্ঞাসা করুন',
+    marketInsights: 'বাজার অন্তর্দৃষ্টি',
+    findInvestors: 'বিনিয়োগকারী খুঁজুন',
+    governmentSchemes: 'সরকারি প্রকল্প',
+    dataSources: 'ডেটা উৎস',
+    knowledgeBase: 'জ্ঞান ভাণ্ডার',
+    
+    // Dashboard
+    fundingDashboard: 'ফান্ডিং ড্যাশবোর্ড',
+    totalFunding: 'মোট ফান্ডিং',
+    uniqueInvestors: 'অনন্য বিনিয়োগকারী',
+    fundedStartups: 'ফান্ডেড স্টার্টআপ',
+    
+    // Investors Section
+    topInvestors: 'শীর্ষ বিনিয়োগকারী',
+    
+    // Policies Section
+    governmentPolicies: 'সরকারি নীতি',
+    
+    // Search modes
     searchMode: 'অনুসন্ধান মোড',
     documentsOnly: 'শুধুমাত্র ডকুমেন্ট',
     webOnly: 'শুধুমাত্র ওয়েব',
     combined: 'সম্মিলিত',
-    documentsOnlyDesc: 'শুধুমাত্র আপলোড করা ডকুমেন্টে অনুসন্ধান করুন',
-    webOnlyDesc: 'শুধুমাত্র ওয়েবে অনুসন্ধান করুন',
-    combinedDesc: 'প্রথমে ডকুমেন্ট, তারপর ওয়েব',
+    
+    // Chat interface
     startExploring: 'অন্বেষণ শুরু করুন',
-    askAnyQuestion: 'স্টার্টআপ ফান্ডিং, বিনিয়োগকারী বা সরকারি নীতি সম্পর্কে যেকোনো প্রশ্ন জিজ্ঞাসা করুন',
     askPlaceholder: 'এখানে আপনার প্রশ্ন জিজ্ঞাসা করুন...',
-    clearConversation: 'কথোপকথন মুছুন',
-    searchingKnowledgeBase: 'জ্ঞান ভাণ্ডারে অনুসন্ধান করা হচ্ছে...',
-    searchingWeb: 'ওয়েবে অনুসন্ধান করা হচ্ছে...',
-    documentsNoInfo: 'আপনি যে নির্দিষ্ট তথ্য চেয়েছেন তা ডকুমেন্টে নেই।',
-    wouldYouLikeWebSearch: 'আরও আপ-টু-ডেট তথ্যের জন্য ওয়েবে অনুসন্ধান করতে চান?',
-    searchTheWeb: 'ওয়েবে অনুসন্ধান করুন',
-    searching: 'অনুসন্ধান করা হচ্ছে...',
-    fromKnowledgeBase: 'জ্ঞান ভাণ্ডার থেকে:',
-    webSources: 'ওয়েব উৎস:',
-    errorTitle: 'ত্রুটি',
-    rateLimitError: 'রেট সীমা অতিক্রম করেছে। অনুগ্রহ করে কিছুক্ষণ পরে আবার চেষ্টা করুন।',
-    creditsExhausted: 'AI ক্রেডিট শেষ। চালিয়ে যেতে অনুগ্রহ করে ক্রেডিট যোগ করুন।',
-    failedToProcess: 'আপনার প্রশ্ন প্রক্রিয়া করতে ব্যর্থ। অনুগ্রহ করে আবার চেষ্টা করুন।',
-    webSearchFailed: 'ওয়েব অনুসন্ধান করা যায়নি।',
-    webSearchComplete: 'ওয়েব অনুসন্ধান সম্পন্ন',
-    foundInfoFromWeb: 'ওয়েব থেকে তথ্য পাওয়া গেছে!',
+    
+    // Footer
+    footerTagline: 'বহুভাষিক RAG-ভিত্তিক স্টার্টআপ ফান্ডিং ইন্টেলিজেন্স সিস্টেম',
     send: 'পাঠান',
+    
+    // Sector Comparison
+    sectorComparison: 'সেক্টর তুলনা',
+    selectSectorsToCompare: 'তুলনা করতে 5টি সেক্টর পর্যন্ত নির্বাচন করুন',
   },
   mr: {
-    intelligentQuery: 'बुद्धिमान',
-    queryDescription: 'तुमच्या आवडीच्या भाषेत स्टार्टअप फंडिंगबद्दल प्रश्न विचारा. खऱ्या डेटा स्रोतांवर आधारित अंतर्दृष्टी मिळवा.',
+    ...baseTranslations,
+    // Sidebar Menu
+    menu: 'मेनू',
+    askFundingIQ: 'FundingIQ ला विचारा',
+    marketInsights: 'बाजार अंतर्दृष्टी',
+    findInvestors: 'गुंतवणूकदार शोधा',
+    governmentSchemes: 'सरकारी योजना',
+    dataSources: 'डेटा स्रोत',
+    knowledgeBase: 'ज्ञान आधार',
+    
+    // Dashboard
+    fundingDashboard: 'फंडिंग डॅशबोर्ड',
+    totalFunding: 'एकूण फंडिंग',
+    uniqueInvestors: 'अद्वितीय गुंतवणूकदार',
+    fundedStartups: 'फंडेड स्टार्टअप्स',
+    
+    // Investors Section
+    topInvestors: 'शीर्ष गुंतवणूकदार',
+    
+    // Policies Section
+    governmentPolicies: 'सरकारी धोरणे',
+    
+    // Search modes
     searchMode: 'शोध मोड',
     documentsOnly: 'फक्त दस्तऐवज',
     webOnly: 'फक्त वेब',
     combined: 'एकत्रित',
-    documentsOnlyDesc: 'फक्त अपलोड केलेल्या दस्तऐवजांमध्ये शोधा',
-    webOnlyDesc: 'फक्त वेबवर शोधा',
-    combinedDesc: 'आधी दस्तऐवज, मग वेब',
+    
+    // Chat interface
     startExploring: 'शोध सुरू करा',
-    askAnyQuestion: 'स्टार्टअप फंडिंग, गुंतवणूकदार किंवा सरकारी धोरणांबद्दल कोणताही प्रश्न विचारा',
     askPlaceholder: 'तुमचा प्रश्न येथे विचारा...',
-    clearConversation: 'संभाषण साफ करा',
-    searchingKnowledgeBase: 'ज्ञान आधारात शोधत आहे...',
-    searchingWeb: 'वेबवर शोधत आहे...',
-    documentsNoInfo: 'तुम्ही विचारलेली विशिष्ट माहिती दस्तऐवजांमध्ये नाही.',
-    wouldYouLikeWebSearch: 'अधिक अद्ययावत माहितीसाठी वेबवर शोधू इच्छिता?',
-    searchTheWeb: 'वेबवर शोधा',
-    searching: 'शोधत आहे...',
-    fromKnowledgeBase: 'ज्ञान आधारातून:',
-    webSources: 'वेब स्रोत:',
-    errorTitle: 'त्रुटी',
-    rateLimitError: 'दर मर्यादा ओलांडली. कृपया थोड्या वेळाने पुन्हा प्रयत्न करा.',
-    creditsExhausted: 'AI क्रेडिट संपले. सुरू ठेवण्यासाठी कृपया क्रेडिट जोडा.',
-    failedToProcess: 'तुमची क्वेरी प्रक्रिया करण्यात अयशस्वी. कृपया पुन्हा प्रयत्न करा.',
-    webSearchFailed: 'वेब शोध करता आला नाही.',
-    webSearchComplete: 'वेब शोध पूर्ण',
-    foundInfoFromWeb: 'वेबवरून माहिती मिळाली!',
+    
     send: 'पाठवा',
+    
+    // Sector Comparison
+    sectorComparison: 'क्षेत्र तुलना',
+    selectSectorsToCompare: 'तुलनेसाठी 5 क्षेत्रांपर्यंत निवडा',
   },
   gu: {
-    intelligentQuery: 'બુદ્ધિશાળી',
-    queryDescription: 'તમારી પસંદની ભાષામાં સ્ટાર્ટઅપ ફંડિંગ વિશે પ્રશ્નો પૂછો. વાસ્તવિક ડેટા સ્રોતો પર આધારિત આંતરદૃષ્ટિ મેળવો.',
+    ...baseTranslations,
+    // Sidebar Menu
+    menu: 'મેનુ',
+    askFundingIQ: 'FundingIQ પૂછો',
+    marketInsights: 'બજાર આંતરદૃષ્ટિ',
+    findInvestors: 'રોકાણકારો શોધો',
+    governmentSchemes: 'સરકારી યોજનાઓ',
+    dataSources: 'ડેટા સ્રોતો',
+    knowledgeBase: 'જ્ઞાન આધાર',
+    
+    // Dashboard
+    fundingDashboard: 'ફંડિંગ ડેશબોર્ડ',
+    totalFunding: 'કુલ ફંડિંગ',
+    uniqueInvestors: 'અનન્ય રોકાણકારો',
+    fundedStartups: 'ફંડેડ સ્ટાર્ટઅપ્સ',
+    
+    // Investors Section
+    topInvestors: 'ટોચના રોકાણકારો',
+    
+    // Policies Section
+    governmentPolicies: 'સરકારી નીતિઓ',
+    
+    // Search modes
     searchMode: 'શોધ મોડ',
     documentsOnly: 'માત્ર દસ્તાવેજો',
     webOnly: 'માત્ર વેબ',
     combined: 'સંયુક્ત',
-    documentsOnlyDesc: 'માત્ર અપલોડ કરેલા દસ્તાવેજોમાં શોધો',
-    webOnlyDesc: 'માત્ર વેબ પર શોધો',
-    combinedDesc: 'પહેલા દસ્તાવેજો, પછી વેબ',
+    
+    // Chat interface
     startExploring: 'અન્વેષણ શરૂ કરો',
-    askAnyQuestion: 'સ્ટાર્ટઅપ ફંડિંગ, રોકાણકારો અથવા સરકારી નીતિઓ વિશે કોઈપણ પ્રશ્ન પૂછો',
     askPlaceholder: 'તમારો પ્રશ્ન અહીં પૂછો...',
-    clearConversation: 'વાતચીત સાફ કરો',
-    searchingKnowledgeBase: 'જ્ઞાન આધારમાં શોધી રહ્યું છે...',
-    searchingWeb: 'વેબ પર શોધી રહ્યું છે...',
-    documentsNoInfo: 'તમે પૂછેલી ચોક્કસ માહિતી દસ્તાવેજોમાં નથી.',
-    wouldYouLikeWebSearch: 'વધુ અપ-ટુ-ડેટ માહિતી માટે વેબ પર શોધવા માંગો છો?',
-    searchTheWeb: 'વેબ પર શોધો',
-    searching: 'શોધી રહ્યું છે...',
-    fromKnowledgeBase: 'જ્ઞાન આધાર પરથી:',
-    webSources: 'વેબ સ્રોતો:',
-    errorTitle: 'ભૂલ',
-    rateLimitError: 'દર મર્યાદા ઓળંગાઈ. કૃપા કરીને થોડી વાર પછી ફરી પ્રયાસ કરો.',
-    creditsExhausted: 'AI ક્રેડિટ સમાપ્ત. ચાલુ રાખવા માટે કૃપા કરીને ક્રેડિટ ઉમેરો.',
-    failedToProcess: 'તમારી ક્વેરી પ્રક્રિયા કરવામાં નિષ્ફળ. કૃપા કરીને ફરી પ્રયાસ કરો.',
-    webSearchFailed: 'વેબ શોધ કરી શકાઈ નહીં.',
-    webSearchComplete: 'વેબ શોધ પૂર્ણ',
-    foundInfoFromWeb: 'વેબ પરથી માહિતી મળી!',
+    
     send: 'મોકલો',
+    
+    // Sector Comparison
+    sectorComparison: 'ક્ષેત્ર સરખામણી',
+    selectSectorsToCompare: 'સરખામણી માટે 5 ક્ષેત્રો સુધી પસંદ કરો',
   },
   kn: {
-    intelligentQuery: 'ಬುದ್ಧಿವಂತ',
-    queryDescription: 'ನಿಮ್ಮ ಆದ್ಯತೆಯ ಭಾಷೆಯಲ್ಲಿ ಸ್ಟಾರ್ಟ್‌ಅಪ್ ಫಂಡಿಂಗ್ ಬಗ್ಗೆ ಪ್ರಶ್ನೆಗಳನ್ನು ಕೇಳಿ. ನಿಜವಾದ ಡೇಟಾ ಮೂಲಗಳಿಂದ ಬೆಂಬಲಿತ ಒಳನೋಟಗಳನ್ನು ಪಡೆಯಿರಿ.',
+    ...baseTranslations,
+    // Sidebar Menu
+    menu: 'ಮೆನು',
+    askFundingIQ: 'FundingIQ ಕೇಳಿ',
+    marketInsights: 'ಮಾರುಕಟ್ಟೆ ಒಳನೋಟಗಳು',
+    findInvestors: 'ಹೂಡಿಕೆದಾರರನ್ನು ಹುಡುಕಿ',
+    governmentSchemes: 'ಸರ್ಕಾರಿ ಯೋಜನೆಗಳು',
+    dataSources: 'ಡೇಟಾ ಮೂಲಗಳು',
+    knowledgeBase: 'ಜ್ಞಾನ ಬೇಸ್',
+    
+    // Dashboard
+    fundingDashboard: 'ಫಂಡಿಂಗ್ ಡ್ಯಾಶ್‌ಬೋರ್ಡ್',
+    totalFunding: 'ಒಟ್ಟು ಫಂಡಿಂಗ್',
+    uniqueInvestors: 'ವಿಶಿಷ್ಟ ಹೂಡಿಕೆದಾರರು',
+    fundedStartups: 'ಫಂಡೆಡ್ ಸ್ಟಾರ್ಟ್‌ಅಪ್‌ಗಳು',
+    
+    // Investors Section
+    topInvestors: 'ಅಗ್ರ ಹೂಡಿಕೆದಾರರು',
+    
+    // Policies Section
+    governmentPolicies: 'ಸರ್ಕಾರಿ ನೀತಿಗಳು',
+    
+    // Search modes
     searchMode: 'ಹುಡುಕಾಟ ಮೋಡ್',
     documentsOnly: 'ಡಾಕ್ಯುಮೆಂಟ್‌ಗಳು ಮಾತ್ರ',
     webOnly: 'ವೆಬ್ ಮಾತ್ರ',
     combined: 'ಸಂಯೋಜಿತ',
-    documentsOnlyDesc: 'ಅಪ್‌ಲೋಡ್ ಮಾಡಿದ ಡಾಕ್ಯುಮೆಂಟ್‌ಗಳಲ್ಲಿ ಮಾತ್ರ ಹುಡುಕಿ',
-    webOnlyDesc: 'ವೆಬ್‌ನಲ್ಲಿ ಮಾತ್ರ ಹುಡುಕಿ',
-    combinedDesc: 'ಮೊದಲು ಡಾಕ್ಯುಮೆಂಟ್‌ಗಳು, ನಂತರ ವೆಬ್',
+    
+    // Chat interface
     startExploring: 'ಅನ್ವೇಷಣೆ ಪ್ರಾರಂಭಿಸಿ',
-    askAnyQuestion: 'ಸ್ಟಾರ್ಟ್‌ಅಪ್ ಫಂಡಿಂಗ್, ಹೂಡಿಕೆದಾರರು ಅಥವಾ ಸರ್ಕಾರಿ ನೀತಿಗಳ ಬಗ್ಗೆ ಯಾವುದೇ ಪ್ರಶ್ನೆ ಕೇಳಿ',
     askPlaceholder: 'ನಿಮ್ಮ ಪ್ರಶ್ನೆಯನ್ನು ಇಲ್ಲಿ ಕೇಳಿ...',
-    clearConversation: 'ಸಂಭಾಷಣೆ ತೆರವುಗೊಳಿಸಿ',
-    searchingKnowledgeBase: 'ಜ್ಞಾನ ಬೇಸ್‌ನಲ್ಲಿ ಹುಡುಕುತ್ತಿದೆ...',
-    searchingWeb: 'ವೆಬ್‌ನಲ್ಲಿ ಹುಡುಕುತ್ತಿದೆ...',
-    documentsNoInfo: 'ನೀವು ಕೇಳಿದ ನಿರ್ದಿಷ್ಟ ಮಾಹಿತಿ ಡಾಕ್ಯುಮೆಂಟ್‌ಗಳಲ್ಲಿ ಇಲ್ಲ.',
-    wouldYouLikeWebSearch: 'ಹೆಚ್ಚು ನವೀಕೃತ ಮಾಹಿತಿಗಾಗಿ ವೆಬ್‌ನಲ್ಲಿ ಹುಡುಕಲು ಬಯಸುವಿರಾ?',
-    searchTheWeb: 'ವೆಬ್‌ನಲ್ಲಿ ಹುಡುಕಿ',
-    searching: 'ಹುಡುಕುತ್ತಿದೆ...',
-    fromKnowledgeBase: 'ಜ್ಞಾನ ಬೇಸ್‌ನಿಂದ:',
-    webSources: 'ವೆಬ್ ಮೂಲಗಳು:',
-    errorTitle: 'ದೋಷ',
-    rateLimitError: 'ದರ ಮಿತಿ ಮೀರಿದೆ. ದಯವಿಟ್ಟು ಸ್ವಲ್ಪ ಸಮಯದ ನಂತರ ಮತ್ತೆ ಪ್ರಯತ್ನಿಸಿ.',
-    creditsExhausted: 'AI ಕ್ರೆಡಿಟ್‌ಗಳು ಖಾಲಿಯಾಗಿವೆ. ಮುಂದುವರಿಸಲು ದಯವಿಟ್ಟು ಕ್ರೆಡಿಟ್‌ಗಳನ್ನು ಸೇರಿಸಿ.',
-    failedToProcess: 'ನಿಮ್ಮ ಪ್ರಶ್ನೆಯನ್ನು ಪ್ರಕ್ರಿಯೆಗೊಳಿಸಲು ವಿಫಲವಾಗಿದೆ. ದಯವಿಟ್ಟು ಮತ್ತೆ ಪ್ರಯತ್ನಿಸಿ.',
-    webSearchFailed: 'ವೆಬ್ ಹುಡುಕಾಟ ಮಾಡಲು ಸಾಧ್ಯವಾಗಲಿಲ್ಲ.',
-    webSearchComplete: 'ವೆಬ್ ಹುಡುಕಾಟ ಪೂರ್ಣ',
-    foundInfoFromWeb: 'ವೆಬ್‌ನಿಂದ ಮಾಹಿತಿ ಕಂಡುಬಂದಿದೆ!',
+    
     send: 'ಕಳುಹಿಸಿ',
+    
+    // Sector Comparison
+    sectorComparison: 'ವಲಯ ಹೋಲಿಕೆ',
+    selectSectorsToCompare: 'ಹೋಲಿಸಲು 5 ವಲಯಗಳವರೆಗೆ ಆಯ್ಕೆಮಾಡಿ',
   },
   ml: {
-    intelligentQuery: 'ബുദ്ധിമാനായ',
-    queryDescription: 'നിങ്ങൾ ഇഷ്ടപ്പെടുന്ന ഭാഷയിൽ സ്റ്റാർട്ടപ്പ് ഫണ്ടിംഗിനെക്കുറിച്ച് ചോദ്യങ്ങൾ ചോദിക്കുക. യഥാർത്ഥ ഡാറ്റ ഉറവിടങ്ങളാൽ പിന്തുണയ്ക്കുന്ന ഉൾക്കാഴ്ചകൾ നേടുക.',
+    ...baseTranslations,
+    // Sidebar Menu
+    menu: 'മെനു',
+    askFundingIQ: 'FundingIQ ചോദിക്കുക',
+    marketInsights: 'മാർക്കറ്റ് ഉൾക്കാഴ്ചകൾ',
+    findInvestors: 'നിക്ഷേപകരെ കണ്ടെത്തുക',
+    governmentSchemes: 'സർക്കാർ പദ്ധതികൾ',
+    dataSources: 'ഡാറ്റ ഉറവിടങ്ങൾ',
+    knowledgeBase: 'വിജ്ഞാനകോശം',
+    
+    // Dashboard
+    fundingDashboard: 'ഫണ്ടിംഗ് ഡാഷ്‌ബോർഡ്',
+    totalFunding: 'മൊത്തം ഫണ്ടിംഗ്',
+    uniqueInvestors: 'അദ്വിതീയ നിക്ഷേപകർ',
+    fundedStartups: 'ഫണ്ടഡ് സ്റ്റാർട്ടപ്പുകൾ',
+    
+    // Investors Section
+    topInvestors: 'മികച്ച നിക്ഷേപകർ',
+    
+    // Policies Section
+    governmentPolicies: 'സർക്കാർ നയങ്ങൾ',
+    
+    // Search modes
     searchMode: 'തിരയൽ മോഡ്',
     documentsOnly: 'ഡോക്യുമെന്റുകൾ മാത്രം',
     webOnly: 'വെബ് മാത്രം',
     combined: 'സംയോജിത',
-    documentsOnlyDesc: 'അപ്‌ലോഡ് ചെയ്ത ഡോക്യുമെന്റുകളിൽ മാത്രം തിരയുക',
-    webOnlyDesc: 'വെബിൽ മാത്രം തിരയുക',
-    combinedDesc: 'ആദ്യം ഡോക്യുമെന്റുകൾ, പിന്നെ വെബ്',
+    
+    // Chat interface
     startExploring: 'പര്യവേക്ഷണം ആരംഭിക്കുക',
-    askAnyQuestion: 'സ്റ്റാർട്ടപ്പ് ഫണ്ടിംഗ്, നിക്ഷേപകർ അല്ലെങ്കിൽ സർക്കാർ നയങ്ങളെക്കുറിച്ച് ഏത് ചോദ്യവും ചോദിക്കുക',
     askPlaceholder: 'നിങ്ങളുടെ ചോദ്യം ഇവിടെ ചോദിക്കുക...',
-    clearConversation: 'സംഭാഷണം മായ്ക്കുക',
-    searchingKnowledgeBase: 'വിജ്ഞാനകോശത്തിൽ തിരയുന്നു...',
-    searchingWeb: 'വെബിൽ തിരയുന്നു...',
-    documentsNoInfo: 'നിങ്ങൾ ചോദിച്ച നിർദ്ദിഷ്ട വിവരങ്ങൾ ഡോക്യുമെന്റുകളിൽ ഇല്ല.',
-    wouldYouLikeWebSearch: 'കൂടുതൽ അപ്‌ഡേറ്റ് ചെയ്ത വിവരങ്ങൾക്കായി വെബിൽ തിരയാൻ ആഗ്രഹിക്കുന്നുണ്ടോ?',
-    searchTheWeb: 'വെബിൽ തിരയുക',
-    searching: 'തിരയുന്നു...',
-    fromKnowledgeBase: 'വിജ്ഞാനകോശത്തിൽ നിന്ന്:',
-    webSources: 'വെബ് ഉറവിടങ്ങൾ:',
-    errorTitle: 'പിശക്',
-    rateLimitError: 'നിരക്ക് പരിധി കവിഞ്ഞു. ദയവായി കുറച്ച് സമയത്തിന് ശേഷം വീണ്ടും ശ്രമിക്കുക.',
-    creditsExhausted: 'AI ക്രെഡിറ്റുകൾ തീർന്നു. തുടരാൻ ദയവായി ക്രെഡിറ്റുകൾ ചേർക്കുക.',
-    failedToProcess: 'നിങ്ങളുടെ ചോദ്യം പ്രോസസ് ചെയ്യുന്നതിൽ പരാജയപ്പെട്ടു. ദയവായി വീണ്ടും ശ്രമിക്കുക.',
-    webSearchFailed: 'വെബ് തിരയൽ നടത്താൻ കഴിഞ്ഞില്ല.',
-    webSearchComplete: 'വെബ് തിരയൽ പൂർത്തിയായി',
-    foundInfoFromWeb: 'വെബിൽ നിന്ന് വിവരങ്ങൾ കണ്ടെത്തി!',
+    
     send: 'അയയ്ക്കുക',
+    
+    // Sector Comparison
+    sectorComparison: 'മേഖല താരതമ്യം',
+    selectSectorsToCompare: 'താരതമ്യം ചെയ്യാൻ 5 മേഖലകൾ വരെ തിരഞ്ഞെടുക്കുക',
   },
   pa: {
-    intelligentQuery: 'ਬੁੱਧੀਮਾਨ',
-    queryDescription: 'ਆਪਣੀ ਪਸੰਦੀਦਾ ਭਾਸ਼ਾ ਵਿੱਚ ਸਟਾਰਟਅੱਪ ਫੰਡਿੰਗ ਬਾਰੇ ਸਵਾਲ ਪੁੱਛੋ। ਅਸਲ ਡਾਟਾ ਸਰੋਤਾਂ ਦੁਆਰਾ ਸਮਰਥਿਤ ਸੂਝ ਪ੍ਰਾਪਤ ਕਰੋ।',
+    ...baseTranslations,
+    // Sidebar Menu
+    menu: 'ਮੀਨੂ',
+    askFundingIQ: 'FundingIQ ਪੁੱਛੋ',
+    marketInsights: 'ਮਾਰਕੀਟ ਸੂਝ',
+    findInvestors: 'ਨਿਵੇਸ਼ਕ ਲੱਭੋ',
+    governmentSchemes: 'ਸਰਕਾਰੀ ਯੋਜਨਾਵਾਂ',
+    dataSources: 'ਡੇਟਾ ਸਰੋਤ',
+    knowledgeBase: 'ਗਿਆਨ ਅਧਾਰ',
+    
+    // Dashboard
+    fundingDashboard: 'ਫੰਡਿੰਗ ਡੈਸ਼ਬੋਰਡ',
+    totalFunding: 'ਕੁੱਲ ਫੰਡਿੰਗ',
+    uniqueInvestors: 'ਵਿਲੱਖਣ ਨਿਵੇਸ਼ਕ',
+    fundedStartups: 'ਫੰਡਿਡ ਸਟਾਰਟਅੱਪਸ',
+    
+    // Investors Section
+    topInvestors: 'ਚੋਟੀ ਦੇ ਨਿਵੇਸ਼ਕ',
+    
+    // Policies Section
+    governmentPolicies: 'ਸਰਕਾਰੀ ਨੀਤੀਆਂ',
+    
+    // Search modes
     searchMode: 'ਖੋਜ ਮੋਡ',
     documentsOnly: 'ਸਿਰਫ਼ ਦਸਤਾਵੇਜ਼',
     webOnly: 'ਸਿਰਫ਼ ਵੈੱਬ',
     combined: 'ਸੰਯੁਕਤ',
-    documentsOnlyDesc: 'ਸਿਰਫ਼ ਅੱਪਲੋਡ ਕੀਤੇ ਦਸਤਾਵੇਜ਼ਾਂ ਵਿੱਚ ਖੋਜੋ',
-    webOnlyDesc: 'ਸਿਰਫ਼ ਵੈੱਬ ਤੇ ਖੋਜੋ',
-    combinedDesc: 'ਪਹਿਲਾਂ ਦਸਤਾਵੇਜ਼, ਫਿਰ ਵੈੱਬ',
+    
+    // Chat interface
     startExploring: 'ਖੋਜ ਸ਼ੁਰੂ ਕਰੋ',
-    askAnyQuestion: 'ਸਟਾਰਟਅੱਪ ਫੰਡਿੰਗ, ਨਿਵੇਸ਼ਕਾਂ ਜਾਂ ਸਰਕਾਰੀ ਨੀਤੀਆਂ ਬਾਰੇ ਕੋਈ ਵੀ ਸਵਾਲ ਪੁੱਛੋ',
     askPlaceholder: 'ਆਪਣਾ ਸਵਾਲ ਇੱਥੇ ਪੁੱਛੋ...',
-    clearConversation: 'ਗੱਲਬਾਤ ਸਾਫ਼ ਕਰੋ',
-    searchingKnowledgeBase: 'ਗਿਆਨ ਅਧਾਰ ਵਿੱਚ ਖੋਜ ਰਿਹਾ ਹੈ...',
-    searchingWeb: 'ਵੈੱਬ ਤੇ ਖੋਜ ਰਿਹਾ ਹੈ...',
-    documentsNoInfo: 'ਤੁਸੀਂ ਜੋ ਖਾਸ ਜਾਣਕਾਰੀ ਮੰਗੀ ਉਹ ਦਸਤਾਵੇਜ਼ਾਂ ਵਿੱਚ ਨਹੀਂ ਹੈ।',
-    wouldYouLikeWebSearch: 'ਕੀ ਤੁਸੀਂ ਹੋਰ ਤਾਜ਼ਾ ਜਾਣਕਾਰੀ ਲਈ ਵੈੱਬ ਤੇ ਖੋਜ ਕਰਨਾ ਚਾਹੋਗੇ?',
-    searchTheWeb: 'ਵੈੱਬ ਤੇ ਖੋਜੋ',
-    searching: 'ਖੋਜ ਰਿਹਾ ਹੈ...',
-    fromKnowledgeBase: 'ਗਿਆਨ ਅਧਾਰ ਤੋਂ:',
-    webSources: 'ਵੈੱਬ ਸਰੋਤ:',
-    errorTitle: 'ਗਲਤੀ',
-    rateLimitError: 'ਦਰ ਸੀਮਾ ਪਾਰ ਹੋ ਗਈ। ਕਿਰਪਾ ਕਰਕੇ ਥੋੜੀ ਦੇਰ ਬਾਅਦ ਦੁਬਾਰਾ ਕੋਸ਼ਿਸ਼ ਕਰੋ।',
-    creditsExhausted: 'AI ਕ੍ਰੈਡਿਟ ਖਤਮ। ਜਾਰੀ ਰੱਖਣ ਲਈ ਕਿਰਪਾ ਕਰਕੇ ਕ੍ਰੈਡਿਟ ਜੋੜੋ।',
-    failedToProcess: 'ਤੁਹਾਡੀ ਪੁੱਛਗਿੱਛ ਪ੍ਰਕਿਰਿਆ ਕਰਨ ਵਿੱਚ ਅਸਫਲ। ਕਿਰਪਾ ਕਰਕੇ ਦੁਬਾਰਾ ਕੋਸ਼ਿਸ਼ ਕਰੋ।',
-    webSearchFailed: 'ਵੈੱਬ ਖੋਜ ਨਹੀਂ ਕਰ ਸਕਿਆ।',
-    webSearchComplete: 'ਵੈੱਬ ਖੋਜ ਪੂਰੀ',
-    foundInfoFromWeb: 'ਵੈੱਬ ਤੋਂ ਜਾਣਕਾਰੀ ਮਿਲੀ!',
+    
     send: 'ਭੇਜੋ',
+    
+    // Sector Comparison
+    sectorComparison: 'ਸੈਕਟਰ ਤੁਲਨਾ',
+    selectSectorsToCompare: 'ਤੁਲਨਾ ਕਰਨ ਲਈ 5 ਸੈਕਟਰਾਂ ਤੱਕ ਚੁਣੋ',
   },
 };
 
