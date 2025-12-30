@@ -1,6 +1,7 @@
 import { useState, useRef, useEffect, useCallback } from 'react';
-import { Send, Loader2, Sparkles, BookOpen, ChevronRight, FileText } from 'lucide-react';
+import { Send, Loader2, Sparkles, BookOpen, ChevronRight, FileText, Globe, Search } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { Checkbox } from '@/components/ui/checkbox';
 import { LanguageCode, SAMPLE_QUERIES } from '@/lib/constants';
 import { useToast } from '@/hooks/use-toast';
 import ReactMarkdown from 'react-markdown';
@@ -11,6 +12,8 @@ interface Message {
   content: string;
   sources?: Array<{ title: string; url: string }>;
   documentSources?: Array<{ name: string; category: string }>;
+  showWebSearchPrompt?: boolean;
+  originalQuery?: string;
 }
 
 interface QueryInterfaceProps {
@@ -20,11 +23,32 @@ interface QueryInterfaceProps {
 const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL;
 const SUPABASE_ANON_KEY = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY;
 
+// Phrases that indicate the AI doesn't have the answer in documents
+const NO_INFO_PHRASES = [
+  'i do not have specific details',
+  'i don\'t have specific details',
+  'i do not have information',
+  'i don\'t have information',
+  'not in the provided documents',
+  'documents don\'t contain',
+  'documents do not contain',
+  'i would recommend checking',
+  'i couldn\'t find specific',
+  'i could not find specific',
+  'no specific information',
+  'information is not available',
+  'not available in the documents',
+  'cannot find specific details',
+  'don\'t have data about',
+  'do not have data about',
+];
+
 export const QueryInterface = ({ language }: QueryInterfaceProps) => {
   const [query, setQuery] = useState('');
   const [messages, setMessages] = useState<Message[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [streamingContent, setStreamingContent] = useState('');
+  const [isWebSearching, setIsWebSearching] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const { toast } = useToast();
 
@@ -37,6 +61,67 @@ export const QueryInterface = ({ language }: QueryInterfaceProps) => {
   useEffect(() => {
     scrollToBottom();
   }, [messages, streamingContent]);
+
+  // Check if response indicates missing information
+  const checkForMissingInfo = (content: string): boolean => {
+    const lowerContent = content.toLowerCase();
+    return NO_INFO_PHRASES.some(phrase => lowerContent.includes(phrase));
+  };
+
+  // Perform web search using Perplexity
+  const performWebSearch = async (searchQuery: string, messageId: string) => {
+    setIsWebSearching(true);
+    
+    try {
+      const response = await fetch(`${SUPABASE_URL}/functions/v1/web-search`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${SUPABASE_ANON_KEY}`,
+          'apikey': SUPABASE_ANON_KEY,
+        },
+        body: JSON.stringify({ 
+          query: searchQuery,
+          language: language,
+        }),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.error || 'Web search failed');
+      }
+
+      const data = await response.json();
+      
+      // Add web search result as a new message
+      const webSearchMessage: Message = {
+        id: Date.now().toString(),
+        role: 'assistant',
+        content: data.content || 'No results found from web search.',
+        sources: data.citations || [],
+      };
+
+      // Remove the web search prompt from the previous message and add the new one
+      setMessages(prev => prev.map(m => 
+        m.id === messageId ? { ...m, showWebSearchPrompt: false } : m
+      ).concat(webSearchMessage));
+
+      toast({
+        title: 'Web Search Complete',
+        description: 'Found information from the web!',
+      });
+
+    } catch (error) {
+      console.error('Web search error:', error);
+      toast({
+        title: 'Web Search Failed',
+        description: error instanceof Error ? error.message : 'Could not perform web search.',
+        variant: 'destructive',
+      });
+    } finally {
+      setIsWebSearching(false);
+    }
+  };
 
   const handleSubmit = useCallback(async (e?: React.FormEvent) => {
     e?.preventDefault();
@@ -151,11 +236,17 @@ export const QueryInterface = ({ language }: QueryInterfaceProps) => {
         }
       }
 
+      // Check if the response indicates missing information
+      const hasMissingInfo = checkForMissingInfo(fullContent);
+      const messageId = (Date.now() + 1).toString();
+
       const assistantMessage: Message = {
-        id: (Date.now() + 1).toString(),
+        id: messageId,
         role: 'assistant',
         content: fullContent || 'I apologize, but I could not generate a response. Please try again.',
         documentSources: documentSources.length > 0 ? documentSources : undefined,
+        showWebSearchPrompt: hasMissingInfo,
+        originalQuery: hasMissingInfo ? currentQuery : undefined,
       };
 
       setMessages((prev) => [...prev, assistantMessage]);
@@ -249,6 +340,41 @@ export const QueryInterface = ({ language }: QueryInterfaceProps) => {
                           <p>{message.content}</p>
                         )}
                         
+                        {/* Web Search Prompt */}
+                        {message.showWebSearchPrompt && message.originalQuery && (
+                          <div className="mt-4 p-3 bg-primary/5 border border-primary/20 rounded-xl">
+                            <div className="flex items-start gap-3">
+                              <Globe className="w-5 h-5 text-primary mt-0.5 flex-shrink-0" />
+                              <div className="flex-1">
+                                <p className="text-sm font-medium text-foreground mb-2">
+                                  Documents don't have the specific information you asked for.
+                                </p>
+                                <p className="text-xs text-muted-foreground mb-3">
+                                  Would you like to search the web for more up-to-date information?
+                                </p>
+                                <Button
+                                  size="sm"
+                                  onClick={() => performWebSearch(message.originalQuery!, message.id)}
+                                  disabled={isWebSearching}
+                                  className="gap-2"
+                                >
+                                  {isWebSearching ? (
+                                    <>
+                                      <Loader2 className="w-4 h-4 animate-spin" />
+                                      Searching...
+                                    </>
+                                  ) : (
+                                    <>
+                                      <Search className="w-4 h-4" />
+                                      Search the Web
+                                    </>
+                                  )}
+                                </Button>
+                              </div>
+                            </div>
+                          </div>
+                        )}
+                        
                         {/* Document Sources */}
                         {message.documentSources && message.documentSources.length > 0 && (
                           <div className="mt-3 pt-3 border-t border-border/30">
@@ -273,8 +399,8 @@ export const QueryInterface = ({ language }: QueryInterfaceProps) => {
                         {message.sources && message.sources.length > 0 && (
                           <div className="mt-3 pt-3 border-t border-border/30">
                             <p className="text-xs text-muted-foreground mb-2 flex items-center gap-1">
-                              <BookOpen className="w-3 h-3" />
-                              Sources:
+                              <Globe className="w-3 h-3" />
+                              Web Sources:
                             </p>
                             <div className="flex flex-wrap gap-2">
                               {message.sources.map((source, idx) => (
@@ -302,6 +428,18 @@ export const QueryInterface = ({ language }: QueryInterfaceProps) => {
                       <div className="max-w-[80%] rounded-2xl px-5 py-3 bg-secondary/70 text-foreground">
                         <div className="prose prose-sm max-w-none dark:prose-invert">
                           <ReactMarkdown>{streamingContent}</ReactMarkdown>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                  
+                  {/* Web Search Loading */}
+                  {isWebSearching && (
+                    <div className="flex justify-start">
+                      <div className="bg-secondary/70 rounded-2xl px-5 py-3">
+                        <div className="flex items-center gap-2">
+                          <Loader2 className="w-4 h-4 animate-spin text-primary" />
+                          <span className="text-sm text-muted-foreground">Searching the web...</span>
                         </div>
                       </div>
                     </div>
@@ -337,13 +475,13 @@ export const QueryInterface = ({ language }: QueryInterfaceProps) => {
                       : 'Ask your question here...'
                   }
                   className="query-input flex-1"
-                  disabled={isLoading}
+                  disabled={isLoading || isWebSearching}
                 />
                 <Button
                   type="submit"
                   variant="hero"
                   size="lg"
-                  disabled={isLoading || !query.trim()}
+                  disabled={isLoading || isWebSearching || !query.trim()}
                 >
                   {isLoading ? (
                     <Loader2 className="w-5 h-5 animate-spin" />
