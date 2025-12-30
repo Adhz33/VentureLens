@@ -6,19 +6,42 @@ interface AuthContextType {
   user: User | null;
   session: Session | null;
   loading: boolean;
+  isDemo: boolean;
   signUp: (email: string, password: string) => Promise<{ error: Error | null }>;
   signIn: (email: string, password: string) => Promise<{ error: Error | null }>;
   signOut: () => Promise<void>;
+  enterDemoMode: () => void;
+  exitDemoMode: () => void;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
+
+// Demo user object for demo mode
+const DEMO_USER: User = {
+  id: 'demo-user-id',
+  email: 'demo@venturelens.app',
+  app_metadata: {},
+  user_metadata: { name: 'Demo User' },
+  aud: 'authenticated',
+  created_at: new Date().toISOString(),
+};
 
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [user, setUser] = useState<User | null>(null);
   const [session, setSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState(true);
+  const [isDemo, setIsDemo] = useState(false);
 
   useEffect(() => {
+    // Check for demo mode in sessionStorage
+    const demoMode = sessionStorage.getItem('venturelens_demo_mode');
+    if (demoMode === 'true') {
+      setIsDemo(true);
+      setUser(DEMO_USER);
+      setLoading(false);
+      return;
+    }
+
     // Set up auth state listener FIRST
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       (event, session) => {
@@ -59,11 +82,28 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   };
 
   const signOut = async () => {
+    if (isDemo) {
+      exitDemoMode();
+      return;
+    }
     await supabase.auth.signOut();
   };
 
+  const enterDemoMode = () => {
+    sessionStorage.setItem('venturelens_demo_mode', 'true');
+    setIsDemo(true);
+    setUser(DEMO_USER);
+  };
+
+  const exitDemoMode = () => {
+    sessionStorage.removeItem('venturelens_demo_mode');
+    setIsDemo(false);
+    setUser(null);
+    setSession(null);
+  };
+
   return (
-    <AuthContext.Provider value={{ user, session, loading, signUp, signIn, signOut }}>
+    <AuthContext.Provider value={{ user, session, loading, isDemo, signUp, signIn, signOut, enterDemoMode, exitDemoMode }}>
       {children}
     </AuthContext.Provider>
   );

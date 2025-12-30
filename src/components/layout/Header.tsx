@@ -14,11 +14,11 @@ interface HeaderProps {
 export const Header = ({ selectedLanguage, onLanguageChange }: HeaderProps) => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isLangOpen, setIsLangOpen] = useState(false);
-  const { user, signOut } = useAuth();
+  const { user, signOut, isDemo } = useAuth();
 
   const handleSignOut = async () => {
     await signOut();
-    toast.success('Signed out successfully');
+    toast.success(isDemo ? 'Exited demo mode' : 'Signed out successfully');
   };
 
   const currentLang = SUPPORTED_LANGUAGES.find(l => l.code === selectedLanguage);
@@ -34,9 +34,16 @@ export const Header = ({ selectedLanguage, onLanguageChange }: HeaderProps) => {
               <div className="absolute -bottom-0.5 -right-0.5 w-3 h-3 rounded-full bg-success animate-pulse" />
             </div>
             <div>
-              <h1 className="font-display font-bold text-lg text-foreground">
-                Venture<span className="text-brand-orange">Lens</span>
-              </h1>
+              <div className="flex items-center gap-2">
+                <h1 className="font-display font-bold text-lg text-foreground">
+                  Venture<span className="text-brand-orange">Lens</span>
+                </h1>
+                {isDemo && (
+                  <span className="px-1.5 py-0.5 text-[10px] font-medium bg-brand-orange/20 text-brand-orange rounded-full">
+                    DEMO
+                  </span>
+                )}
+              </div>
               <p className="text-[10px] text-muted-foreground -mt-0.5">
                 Startup Intelligence
               </p>
