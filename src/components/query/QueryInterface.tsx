@@ -8,6 +8,7 @@ import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
 import ReactMarkdown from 'react-markdown';
+import logo1 from '@/assets/logo1.png';
 
 interface Message {
   id: string;
@@ -367,15 +368,12 @@ export const QueryInterface = ({ language }: QueryInterfaceProps) => {
             <div className="h-[400px] overflow-y-auto p-6 space-y-4 scrollbar-hide">
               {messages.length === 0 && !streamingContent ? (
                 <div className="h-full flex flex-col items-center justify-center text-center">
-                  <div className="w-16 h-16 rounded-2xl bg-primary/10 flex items-center justify-center mb-4">
-                    <Sparkles className="w-8 h-8 text-primary" />
+                  <div className="w-20 h-20 flex items-center justify-center mb-4">
+                    <img src={logo1} alt="VentureLens" className="w-16 h-16 object-contain" />
                   </div>
-                  <h3 className="font-display font-semibold text-lg text-foreground mb-2">
+                  <h3 className="font-display font-semibold text-lg text-foreground mb-6">
                     {t.startExploring}
                   </h3>
-                  <p className="text-sm text-muted-foreground mb-6 max-w-md">
-                    {t.askAnyQuestion}
-                  </p>
                   
                   {/* Sample Queries */}
                   <div className="flex flex-wrap gap-2 justify-center">

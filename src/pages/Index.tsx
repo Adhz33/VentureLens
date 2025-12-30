@@ -280,7 +280,7 @@ const Index = () => {
               </p>
               
               <p className="text-sm text-muted-foreground">
-                © 2024 Venture<span className="text-brand-orange">Lens</span> by InVento.
+                © 2025 Venture<span className="text-brand-orange">Lens</span> by InVento.
               </p>
             </div>
           </div>
