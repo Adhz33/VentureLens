@@ -9,7 +9,7 @@ export interface UITranslations {
   
   // Sidebar Menu
   menu: string;
-  askFundingIQ: string;
+  askVentureLens: string;
   marketInsights: string;
   findInvestors: string;
   governmentSchemes: string;
@@ -199,7 +199,7 @@ const baseTranslations: UITranslations = {
   
   // Sidebar Menu
   menu: 'Menu',
-  askFundingIQ: 'Ask FundingIQ',
+  askVentureLens: 'Ask VentureLens',
   marketInsights: 'Market Insights',
   findInvestors: 'Find Investors',
   governmentSchemes: 'Government Schemes',
@@ -392,7 +392,7 @@ export const translations: Record<LanguageCode, UITranslations> = {
     
     // Sidebar Menu
     menu: 'मेनू',
-    askFundingIQ: 'FundingIQ से पूछें',
+    askVentureLens: 'VentureLens से पूछें',
     marketInsights: 'बाजार अंतर्दृष्टि',
     findInvestors: 'निवेशक खोजें',
     governmentSchemes: 'सरकारी योजनाएं',
@@ -582,7 +582,7 @@ export const translations: Record<LanguageCode, UITranslations> = {
     
     // Sidebar Menu
     menu: 'மெனு',
-    askFundingIQ: 'FundingIQ கேளுங்கள்',
+    askVentureLens: 'VentureLens கேளுங்கள்',
     marketInsights: 'சந்தை நுண்ணறிவு',
     findInvestors: 'முதலீட்டாளர்களைக் கண்டறியுங்கள்',
     governmentSchemes: 'அரசு திட்டங்கள்',
@@ -667,7 +667,7 @@ export const translations: Record<LanguageCode, UITranslations> = {
     
     // Sidebar Menu
     menu: 'మెను',
-    askFundingIQ: 'FundingIQ అడగండి',
+    askVentureLens: 'VentureLens అడగండి',
     marketInsights: 'మార్కెట్ అంతర్దృష్టులు',
     findInvestors: 'పెట్టుబడిదారులను కనుగొనండి',
     governmentSchemes: 'ప్రభుత్వ పథకాలు',
@@ -713,7 +713,7 @@ export const translations: Record<LanguageCode, UITranslations> = {
     ...baseTranslations,
     // Sidebar Menu
     menu: 'মেনু',
-    askFundingIQ: 'FundingIQ জিজ্ঞাসা করুন',
+    askVentureLens: 'VentureLens জিজ্ঞাসা করুন',
     marketInsights: 'বাজার অন্তর্দৃষ্টি',
     findInvestors: 'বিনিয়োগকারী খুঁজুন',
     governmentSchemes: 'সরকারি প্রকল্প',
@@ -754,7 +754,7 @@ export const translations: Record<LanguageCode, UITranslations> = {
     ...baseTranslations,
     // Sidebar Menu
     menu: 'मेनू',
-    askFundingIQ: 'FundingIQ ला विचारा',
+    askVentureLens: 'VentureLens ला विचारा',
     marketInsights: 'बाजार अंतर्दृष्टी',
     findInvestors: 'गुंतवणूकदार शोधा',
     governmentSchemes: 'सरकारी योजना',
@@ -793,7 +793,7 @@ export const translations: Record<LanguageCode, UITranslations> = {
     ...baseTranslations,
     // Sidebar Menu
     menu: 'મેનુ',
-    askFundingIQ: 'FundingIQ પૂછો',
+    askVentureLens: 'VentureLens પૂછો',
     marketInsights: 'બજાર આંતરદૃષ્ટિ',
     findInvestors: 'રોકાણકારો શોધો',
     governmentSchemes: 'સરકારી યોજનાઓ',
@@ -832,7 +832,7 @@ export const translations: Record<LanguageCode, UITranslations> = {
     ...baseTranslations,
     // Sidebar Menu
     menu: 'ಮೆನು',
-    askFundingIQ: 'FundingIQ ಕೇಳಿ',
+    askVentureLens: 'VentureLens ಕೇಳಿ',
     marketInsights: 'ಮಾರುಕಟ್ಟೆ ಒಳನೋಟಗಳು',
     findInvestors: 'ಹೂಡಿಕೆದಾರರನ್ನು ಹುಡುಕಿ',
     governmentSchemes: 'ಸರ್ಕಾರಿ ಯೋಜನೆಗಳು',
@@ -871,7 +871,7 @@ export const translations: Record<LanguageCode, UITranslations> = {
     ...baseTranslations,
     // Sidebar Menu
     menu: 'മെനു',
-    askFundingIQ: 'FundingIQ ചോദിക്കുക',
+    askVentureLens: 'VentureLens ചോദിക്കുക',
     marketInsights: 'മാർക്കറ്റ് ഉൾക്കാഴ്ചകൾ',
     findInvestors: 'നിക്ഷേപകരെ കണ്ടെത്തുക',
     governmentSchemes: 'സർക്കാർ പദ്ധതികൾ',
@@ -910,7 +910,7 @@ export const translations: Record<LanguageCode, UITranslations> = {
     ...baseTranslations,
     // Sidebar Menu
     menu: 'ਮੀਨੂ',
-    askFundingIQ: 'FundingIQ ਪੁੱਛੋ',
+    askVentureLens: 'VentureLens ਪੁੱਛੋ',
     marketInsights: 'ਮਾਰਕੀਟ ਸੂਝ',
     findInvestors: 'ਨਿਵੇਸ਼ਕ ਲੱਭੋ',
     governmentSchemes: 'ਸਰਕਾਰੀ ਯੋਜਨਾਵਾਂ',

@@ -1,7 +1,8 @@
-import { Database, Globe, Menu, Sparkles, X } from 'lucide-react';
+import { Database, Globe, Menu, X } from 'lucide-react';
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { SUPPORTED_LANGUAGES, LanguageCode } from '@/lib/constants';
+import logo from '@/assets/logo.png';
 
 interface HeaderProps {
   selectedLanguage: LanguageCode;
@@ -21,14 +22,12 @@ export const Header = ({ selectedLanguage, onLanguageChange }: HeaderProps) => {
           {/* Logo */}
           <div className="flex items-center gap-3">
             <div className="relative">
-              <div className="w-10 h-10 rounded-xl bg-primary/20 flex items-center justify-center">
-                <Sparkles className="w-5 h-5 text-primary" />
-              </div>
+              <img src={logo} alt="VentureLens" className="w-10 h-10 object-contain" />
               <div className="absolute -bottom-0.5 -right-0.5 w-3 h-3 rounded-full bg-success animate-pulse" />
             </div>
             <div>
               <h1 className="font-display font-bold text-lg text-foreground">
-                FundingIQ
+                VentureLens
               </h1>
               <p className="text-[10px] text-muted-foreground -mt-0.5">
                 Startup Intelligence
