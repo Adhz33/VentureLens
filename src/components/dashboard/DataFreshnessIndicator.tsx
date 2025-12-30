@@ -2,8 +2,13 @@ import { useState, useEffect } from 'react';
 import { RefreshCw, CheckCircle, Clock } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { formatDistanceToNow } from 'date-fns';
+import { useAuth } from '@/hooks/useAuth';
+
+const DEMO_RECORD_COUNT = 18;
+const DEMO_LAST_UPDATE = new Date(Date.now() - 1000 * 60 * 60 * 36); // ~36 hours ago
 
 export const DataFreshnessIndicator = () => {
+  const { isDemo } = useAuth();
   const [lastUpdate, setLastUpdate] = useState<Date | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [recordCount, setRecordCount] = useState(0);
@@ -25,7 +30,7 @@ export const DataFreshnessIndicator = () => {
         const { count } = await supabase
           .from('funding_data')
           .select('*', { count: 'exact', head: true });
-        
+
         setRecordCount(count || 0);
       } catch (err) {
         console.error('Error fetching data freshness:', err);
@@ -37,39 +42,42 @@ export const DataFreshnessIndicator = () => {
     fetchLastUpdate();
   }, []);
 
+  const effectiveLastUpdate = lastUpdate ?? (isDemo ? DEMO_LAST_UPDATE : null);
+  const effectiveRecordCount = recordCount > 0 ? recordCount : (isDemo ? DEMO_RECORD_COUNT : 0);
+
   const getStatusColor = () => {
-    if (!lastUpdate) return 'text-muted-foreground';
-    const hoursSinceUpdate = (Date.now() - lastUpdate.getTime()) / (1000 * 60 * 60);
-    if (hoursSinceUpdate < 24) return 'text-green-500';
-    if (hoursSinceUpdate < 72) return 'text-yellow-500';
-    return 'text-orange-500';
+    if (!effectiveLastUpdate) return 'text-muted-foreground';
+    const hoursSinceUpdate = (Date.now() - effectiveLastUpdate.getTime()) / (1000 * 60 * 60);
+    if (hoursSinceUpdate < 24) return 'text-success';
+    if (hoursSinceUpdate < 72) return 'text-warning';
+    return 'text-primary';
   };
 
   const getStatusIcon = () => {
     if (isLoading) return <RefreshCw className="w-3.5 h-3.5 animate-spin" />;
-    if (!lastUpdate) return <Clock className="w-3.5 h-3.5" />;
-    const hoursSinceUpdate = (Date.now() - lastUpdate.getTime()) / (1000 * 60 * 60);
+    if (!effectiveLastUpdate) return <Clock className="w-3.5 h-3.5" />;
+    const hoursSinceUpdate = (Date.now() - effectiveLastUpdate.getTime()) / (1000 * 60 * 60);
     if (hoursSinceUpdate < 24) return <CheckCircle className="w-3.5 h-3.5" />;
     return <Clock className="w-3.5 h-3.5" />;
   };
 
   return (
     <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-secondary/50 border border-border/50 text-xs">
-      <span className={getStatusColor()}>
-        {getStatusIcon()}
-      </span>
+      <span className={getStatusColor()}>{getStatusIcon()}</span>
       <span className="text-muted-foreground">
         {isLoading ? (
           'Checking...'
-        ) : lastUpdate ? (
+        ) : effectiveLastUpdate ? (
           <>
-            <span className="font-medium text-foreground">{recordCount.toLocaleString()}</span> records · Updated{' '}
+            <span className="font-medium text-foreground">{effectiveRecordCount.toLocaleString()}</span> records · Updated{' '}
             <span className={getStatusColor()}>
-              {formatDistanceToNow(lastUpdate, { addSuffix: true })}
+              {formatDistanceToNow(effectiveLastUpdate, { addSuffix: true })}
             </span>
           </>
         ) : (
-          'No data available'
+          <>
+            <span className="font-medium text-foreground">0</span> records
+          </>
         )}
       </span>
     </div>
