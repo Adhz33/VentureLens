@@ -14,6 +14,7 @@ import { DateRangeFilter } from '@/components/dashboard/DateRangeFilter';
 import { DataFreshnessIndicator } from '@/components/dashboard/DataFreshnessIndicator';
 import { QueryInterface } from '@/components/query/QueryInterface';
 import { InvestorCard } from '@/components/investors/InvestorCard';
+import { InvestorMatchingPanel } from '@/components/investors/InvestorMatchingPanel';
 import { PolicyCard } from '@/components/policies/PolicyCard';
 import { DataSourcePanel } from '@/components/data/DataSourcePanel';
 import { LanguageCode } from '@/lib/constants';
@@ -211,6 +212,9 @@ const Index = () => {
 
         {/* Query Interface */}
         <QueryInterface language={selectedLanguage} />
+
+        {/* Investor Matching */}
+        <InvestorMatchingPanel selectedLanguage={selectedLanguage} />
 
         {/* Investors Section */}
         <section id="investors" className="py-16 bg-background relative">
