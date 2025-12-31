@@ -53,24 +53,24 @@ graph TD
 
 ---
 
-## 🚀 Key Features
+##  Key Features
 
-### 1. 🤖 AI-Powered RAG Query
+### 1.  AI-Powered RAG Query
 Ask complex questions about the Indian startup ecosystem. The system retrieves relevant chunks from its knowledge base (documents, reports, news) and uses **Google Gemini** to synthesize accurate, cited answers.
 - **Hybrid Search**: Combines keyword search with semantic vector search.
 - **Source Citation**: Always links back to the original document or web source.
 
-### 2. 🤝 Smart Investor Matching
+### 2.  Smart Investor Matching
 Founders can input their startup profile (Sector, Stage, Funding Needed). The AI analyzes this profile against a database of investors to recommend the best matches.
 - **Match Score**: Calculates a fit percentage based on thesis alignment.
 - **Talking Points**: Generates personalized pitch strategies for each investor.
 
-### 3. 🕸️ Automated Data Ingestion
+### 3.  Automated Data Ingestion
 Keep the intelligence fresh by scraping web data.
 - **Firecrawl Integration**: Scrape websites and turn them into structured knowledge.
 - **Document Processing**: Upload PDF, DOCX, or Excel files to automatically generate embeddings.
 
-### 4. 🔑 Secure API Key Management
+### 4.  Secure API Key Management
 Privacy-first architecture. Users bring their own API keys.
 - **Local Storage**: Keys (Gemini, Firecrawl, Perplexity) are stored encrypted in your browser's `localStorage`.
 - **Direct Pass-through**: Keys are sent via secure headers (`x-gemini-key`, `x-cloud-key`) directly to Edge Functions. They are never saved to our database.
