@@ -33,12 +33,14 @@ serve(async (req) => {
 
   try {
     const { startupProfile } = await req.json() as { startupProfile: StartupProfile };
-    
+
     console.log('Matching investors for startup:', startupProfile.name, 'Sector:', startupProfile.sector);
 
-    const LOVABLE_API_KEY = Deno.env.get('LOVABLE_API_KEY');
-    if (!LOVABLE_API_KEY) {
-      throw new Error('LOVABLE_API_KEY is not configured');
+    const headerApiKey = req.headers.get('x-gemini-key');
+    const GEMINI_API_KEY = headerApiKey || Deno.env.get('GEMINI_API_KEY') || Deno.env.get('LOVABLE_API_KEY');
+
+    if (!GEMINI_API_KEY) {
+      throw new Error('AI service (Gemini) is not configured');
     }
 
     // Initialize Supabase client
@@ -142,7 +144,7 @@ serve(async (req) => {
       },
     ];
 
-    const investorContext = investorPool.map(inv => 
+    const investorContext = investorPool.map(inv =>
       `- ${inv.name} (${inv.investor_type}): Focus areas: ${inv.portfolio_focus?.join(', ') || 'Various'}. Location: ${inv.location}. Notable investments: ${inv.notable_investments?.join(', ') || 'N/A'}. Total invested: $${((inv.total_investments || 0) / 1000000000).toFixed(1)}B`
     ).join('\n');
 
@@ -182,16 +184,17 @@ Description: ${startupProfile.description}
 
 Provide investor matches with scores and explanations.`;
 
-    console.log('Calling Lovable AI for investor matching...');
+    console.log('Calling Gemini API for investor matching...');
 
-    const response = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
+    // Using Google's OpenAI-compatible endpoint for Gemini
+    const response = await fetch('https://generativelanguage.googleapis.com/v1beta/openai/chat/completions', {
       method: 'POST',
       headers: {
-        'Authorization': `Bearer ${LOVABLE_API_KEY}`,
+        'Authorization': `Bearer ${GEMINI_API_KEY}`,
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        model: 'google/gemini-2.5-flash',
+        model: 'gemini-1.5-flash',
         messages: [
           { role: 'system', content: systemPrompt },
           { role: 'user', content: userPrompt }
@@ -203,7 +206,7 @@ Provide investor matches with scores and explanations.`;
     if (!response.ok) {
       const errorText = await response.text();
       console.error('AI Gateway error:', response.status, errorText);
-      
+
       if (response.status === 429) {
         return new Response(JSON.stringify({ error: 'Rate limit exceeded. Please try again later.' }), {
           status: 429,
@@ -250,7 +253,7 @@ Provide investor matches with scores and explanations.`;
 
     // Enrich matches with full investor data
     const enrichedMatches = matchResult.matches?.map((match: any) => {
-      const investor = investorPool.find(inv => 
+      const investor = investorPool.find(inv =>
         inv.name.toLowerCase().includes(match.investorName.toLowerCase()) ||
         match.investorName.toLowerCase().includes(inv.name.toLowerCase())
       );
@@ -280,8 +283,8 @@ Provide investor matches with scores and explanations.`;
 
   } catch (error) {
     console.error('Investor matching error:', error);
-    return new Response(JSON.stringify({ 
-      error: error instanceof Error ? error.message : 'Unknown error' 
+    return new Response(JSON.stringify({
+      error: error instanceof Error ? error.message : 'Unknown error'
     }), {
       status: 500,
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },

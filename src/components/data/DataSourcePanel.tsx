@@ -8,6 +8,7 @@ import { CrawlScheduler } from './CrawlScheduler';
 import { LanguageCode } from '@/lib/constants';
 import { getTranslation } from '@/lib/localization';
 import { formatDistanceToNow, format } from 'date-fns';
+import { useApiKeys } from '@/contexts/ApiKeyContext';
 
 interface DataSource {
   id: string;
@@ -30,6 +31,7 @@ export const DataSourcePanel = ({ selectedLanguage = 'en' }: DataSourcePanelProp
   const [dataSources, setDataSources] = useState<DataSource[]>([]);
   const { toast } = useToast();
   const t = getTranslation(selectedLanguage);
+  const { firecrawlApiKey } = useApiKeys();
 
   // Fetch data sources from database
   useEffect(() => {
@@ -91,7 +93,7 @@ export const DataSourcePanel = ({ selectedLanguage = 'en' }: DataSourcePanelProp
       const result = await firecrawlApi.scrape(url.trim(), {
         formats: ['markdown'],
         onlyMainContent: true,
-      });
+      }, firecrawlApiKey);
 
       if (result.success && result.data) {
         // Save to database via edge function
@@ -110,11 +112,11 @@ export const DataSourcePanel = ({ selectedLanguage = 'en' }: DataSourcePanelProp
           prev.map((s) =>
             s.id === newSource.id
               ? {
-                  ...s,
-                  title: result.data.metadata?.title || 'Scraped Content',
-                  status: 'completed' as const,
-                  updatedAt: new Date().toISOString(),
-                }
+                ...s,
+                title: result.data.metadata?.title || 'Scraped Content',
+                status: 'completed' as const,
+                updatedAt: new Date().toISOString(),
+              }
               : s
           )
         );
@@ -221,53 +223,53 @@ export const DataSourcePanel = ({ selectedLanguage = 'en' }: DataSourcePanelProp
             </div>
 
             <div className="divide-y divide-border/30">
-            {isLoading ? (
-              <div className="p-8 text-center">
-                <Loader2 className="w-6 h-6 animate-spin mx-auto text-muted-foreground" />
-                <p className="text-sm text-muted-foreground mt-2">Loading sources...</p>
-              </div>
-            ) : dataSources.length === 0 ? (
-              <div className="p-8 text-center">
-                <Globe className="w-8 h-8 mx-auto text-muted-foreground mb-2" />
-                <p className="text-muted-foreground">No data sources yet. Add a URL above to get started.</p>
-              </div>
-            ) : (
-              dataSources.map((source, index) => (
-                <div
-                  key={source.id}
-                  className="p-4 flex items-center gap-4 hover:bg-secondary/30 transition-colors opacity-0 animate-fade-in"
-                  style={{ animationDelay: `${index * 100}ms`, animationFillMode: 'forwards' }}
-                >
-                  <div className="w-10 h-10 rounded-lg bg-secondary/50 flex items-center justify-center text-muted-foreground">
-                    {getSourceIcon(source.sourceType)}
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <p className="font-medium text-foreground truncate">{source.title}</p>
-                    <p className="text-sm text-muted-foreground truncate">{source.url}</p>
-                  </div>
-                  <div className="flex flex-col items-end gap-1">
-                    <div className="flex items-center gap-2">
-                      <Clock className="w-3 h-3 text-muted-foreground" />
-                      <span 
-                        className="text-xs text-muted-foreground" 
-                        title={`Updated: ${format(new Date(source.updatedAt), 'PPpp')}`}
-                      >
-                        {formatDistanceToNow(new Date(source.updatedAt), { addSuffix: true })}
-                      </span>
-                    </div>
-                    {source.createdAt !== source.updatedAt && (
-                      <span 
-                        className="text-xs text-muted-foreground/60"
-                        title={`Created: ${format(new Date(source.createdAt), 'PPpp')}`}
-                      >
-                        Created {formatDistanceToNow(new Date(source.createdAt), { addSuffix: true })}
-                      </span>
-                    )}
-                  </div>
-                  {getStatusIcon(source.status)}
+              {isLoading ? (
+                <div className="p-8 text-center">
+                  <Loader2 className="w-6 h-6 animate-spin mx-auto text-muted-foreground" />
+                  <p className="text-sm text-muted-foreground mt-2">Loading sources...</p>
                 </div>
-              ))
-            )}
+              ) : dataSources.length === 0 ? (
+                <div className="p-8 text-center">
+                  <Globe className="w-8 h-8 mx-auto text-muted-foreground mb-2" />
+                  <p className="text-muted-foreground">No data sources yet. Add a URL above to get started.</p>
+                </div>
+              ) : (
+                dataSources.map((source, index) => (
+                  <div
+                    key={source.id}
+                    className="p-4 flex items-center gap-4 hover:bg-secondary/30 transition-colors opacity-0 animate-fade-in"
+                    style={{ animationDelay: `${index * 100}ms`, animationFillMode: 'forwards' }}
+                  >
+                    <div className="w-10 h-10 rounded-lg bg-secondary/50 flex items-center justify-center text-muted-foreground">
+                      {getSourceIcon(source.sourceType)}
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="font-medium text-foreground truncate">{source.title}</p>
+                      <p className="text-sm text-muted-foreground truncate">{source.url}</p>
+                    </div>
+                    <div className="flex flex-col items-end gap-1">
+                      <div className="flex items-center gap-2">
+                        <Clock className="w-3 h-3 text-muted-foreground" />
+                        <span
+                          className="text-xs text-muted-foreground"
+                          title={`Updated: ${format(new Date(source.updatedAt), 'PPpp')}`}
+                        >
+                          {formatDistanceToNow(new Date(source.updatedAt), { addSuffix: true })}
+                        </span>
+                      </div>
+                      {source.createdAt !== source.updatedAt && (
+                        <span
+                          className="text-xs text-muted-foreground/60"
+                          title={`Created: ${format(new Date(source.createdAt), 'PPpp')}`}
+                        >
+                          Created {formatDistanceToNow(new Date(source.createdAt), { addSuffix: true })}
+                        </span>
+                      )}
+                    </div>
+                    {getStatusIcon(source.status)}
+                  </div>
+                ))
+              )}
             </div>
           </div>
         </div>

@@ -6,6 +6,7 @@ import { LanguageCode, SAMPLE_QUERIES } from '@/lib/constants';
 import { getTranslation, SearchMode } from '@/lib/localization';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/hooks/useAuth';
+import { useApiKeys } from '@/contexts/ApiKeyContext';
 import { supabase } from '@/integrations/supabase/client';
 import ReactMarkdown from 'react-markdown';
 import logo1 from '@/assets/logo1.png';
@@ -57,6 +58,7 @@ export const QueryInterface = ({ language }: QueryInterfaceProps) => {
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const { toast } = useToast();
   const { session } = useAuth();
+  const { geminiApiKey, cloudApiKey } = useApiKeys();
 
   const t = getTranslation(language);
   const sampleQueries = SAMPLE_QUERIES[language as keyof typeof SAMPLE_QUERIES] || SAMPLE_QUERIES.en;
@@ -78,7 +80,7 @@ export const QueryInterface = ({ language }: QueryInterfaceProps) => {
   // Perform web search using Perplexity
   const performWebSearch = async (searchQuery: string, messageId?: string) => {
     setIsWebSearching(true);
-    
+
     try {
       const response = await fetch(`${SUPABASE_URL}/functions/v1/web-search`, {
         method: 'POST',
@@ -86,8 +88,9 @@ export const QueryInterface = ({ language }: QueryInterfaceProps) => {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${session?.access_token || SUPABASE_ANON_KEY}`,
           'apikey': SUPABASE_ANON_KEY,
+          'x-cloud-key': cloudApiKey,
         },
-        body: JSON.stringify({ 
+        body: JSON.stringify({
           query: searchQuery,
           language: language,
         }),
@@ -99,7 +102,7 @@ export const QueryInterface = ({ language }: QueryInterfaceProps) => {
       }
 
       const data = await response.json();
-      
+
       // Add web search result as a new message
       const webSearchMessage: Message = {
         id: Date.now().toString(),
@@ -110,7 +113,7 @@ export const QueryInterface = ({ language }: QueryInterfaceProps) => {
 
       if (messageId) {
         // Remove the web search prompt from the previous message and add the new one
-        setMessages(prev => prev.map(m => 
+        setMessages(prev => prev.map(m =>
           m.id === messageId ? { ...m, showWebSearchPrompt: false } : m
         ).concat(webSearchMessage));
       } else {
@@ -144,8 +147,9 @@ export const QueryInterface = ({ language }: QueryInterfaceProps) => {
         'Content-Type': 'application/json',
         'Authorization': `Bearer ${session?.access_token || SUPABASE_ANON_KEY}`,
         'apikey': SUPABASE_ANON_KEY,
+        'x-gemini-key': geminiApiKey,
       },
-      body: JSON.stringify({ 
+      body: JSON.stringify({
         query: searchQuery,
         language: language,
         conversationHistory: messages.map(m => ({ role: m.role, content: m.content })),
@@ -264,7 +268,7 @@ export const QueryInterface = ({ language }: QueryInterfaceProps) => {
         // Documents-only mode
         const result = await performDocumentSearch(currentQuery);
         const messageId = (Date.now() + 1).toString();
-        
+
         const assistantMessage: Message = {
           id: messageId,
           role: 'assistant',
@@ -281,7 +285,7 @@ export const QueryInterface = ({ language }: QueryInterfaceProps) => {
         // Combined mode: documents first, then web if needed
         const result = await performDocumentSearch(currentQuery);
         const messageId = (Date.now() + 1).toString();
-        
+
         const assistantMessage: Message = {
           id: messageId,
           role: 'assistant',
@@ -347,11 +351,10 @@ export const QueryInterface = ({ language }: QueryInterfaceProps) => {
                   <button
                     key={option.value}
                     onClick={() => setSearchMode(option.value)}
-                    className={`flex items-center gap-2 px-4 py-2 rounded-lg border transition-all ${
-                      searchMode === option.value
-                        ? 'bg-primary text-primary-foreground border-primary'
-                        : 'bg-secondary/50 text-muted-foreground border-border hover:bg-secondary hover:text-foreground'
-                    }`}
+                    className={`flex items-center gap-2 px-4 py-2 rounded-lg border transition-all ${searchMode === option.value
+                      ? 'bg-primary text-primary-foreground border-primary'
+                      : 'bg-secondary/50 text-muted-foreground border-border hover:bg-secondary hover:text-foreground'
+                      }`}
                     title={option.desc}
                   >
                     <Icon className="w-4 h-4" />
@@ -374,7 +377,7 @@ export const QueryInterface = ({ language }: QueryInterfaceProps) => {
                   <h3 className="font-display font-semibold text-lg text-foreground mb-6">
                     {t.startExploring}
                   </h3>
-                  
+
                   {/* Sample Queries */}
                   <div className="flex flex-wrap gap-2 justify-center">
                     {sampleQueries.slice(0, 3).map((sample, index) => (
@@ -397,11 +400,10 @@ export const QueryInterface = ({ language }: QueryInterfaceProps) => {
                       className={`flex ${message.role === 'user' ? 'justify-end' : 'justify-start'}`}
                     >
                       <div
-                        className={`max-w-[80%] rounded-2xl px-5 py-3 ${
-                          message.role === 'user'
-                            ? 'bg-primary text-primary-foreground'
-                            : 'bg-secondary/70 text-foreground'
-                        }`}
+                        className={`max-w-[80%] rounded-2xl px-5 py-3 ${message.role === 'user'
+                          ? 'bg-primary text-primary-foreground'
+                          : 'bg-secondary/70 text-foreground'
+                          }`}
                       >
                         {message.role === 'assistant' ? (
                           <div className="prose prose-sm max-w-none dark:prose-invert">
@@ -410,7 +412,7 @@ export const QueryInterface = ({ language }: QueryInterfaceProps) => {
                         ) : (
                           <p>{message.content}</p>
                         )}
-                        
+
                         {/* Web Search Prompt */}
                         {message.showWebSearchPrompt && message.originalQuery && (
                           <div className="mt-4 p-3 bg-primary/5 border border-primary/20 rounded-xl">
@@ -445,7 +447,7 @@ export const QueryInterface = ({ language }: QueryInterfaceProps) => {
                             </div>
                           </div>
                         )}
-                        
+
                         {/* Document Sources */}
                         {message.documentSources && message.documentSources.length > 0 && (
                           <div className="mt-3 pt-3 border-t border-border/30">
@@ -465,7 +467,7 @@ export const QueryInterface = ({ language }: QueryInterfaceProps) => {
                             </div>
                           </div>
                         )}
-                        
+
                         {/* Web Sources */}
                         {message.sources && message.sources.length > 0 && (
                           <div className="mt-3 pt-3 border-t border-border/30">
@@ -492,7 +494,7 @@ export const QueryInterface = ({ language }: QueryInterfaceProps) => {
                       </div>
                     </div>
                   ))}
-                  
+
                   {/* Streaming content */}
                   {streamingContent && (
                     <div className="flex justify-start">
@@ -503,7 +505,7 @@ export const QueryInterface = ({ language }: QueryInterfaceProps) => {
                       </div>
                     </div>
                   )}
-                  
+
                   {/* Web Search Loading */}
                   {isWebSearching && (
                     <div className="flex justify-start">
@@ -515,7 +517,7 @@ export const QueryInterface = ({ language }: QueryInterfaceProps) => {
                       </div>
                     </div>
                   )}
-                  
+
                   {isLoading && !streamingContent && !isWebSearching && (
                     <div className="flex justify-start">
                       <div className="bg-secondary/70 rounded-2xl px-6 py-4">

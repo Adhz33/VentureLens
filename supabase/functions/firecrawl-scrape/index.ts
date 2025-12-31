@@ -20,7 +20,8 @@ serve(async (req) => {
       );
     }
 
-    const apiKey = Deno.env.get('FIRECRAWL_API_KEY');
+    const headerApiKey = req.headers.get('x-firecrawl-key');
+    const apiKey = headerApiKey || Deno.env.get('FIRECRAWL_API_KEY');
     if (!apiKey) {
       console.error('FIRECRAWL_API_KEY not configured');
       return new Response(
@@ -62,7 +63,7 @@ serve(async (req) => {
     }
 
     console.log('Scrape successful for:', formattedUrl);
-    
+
     return new Response(
       JSON.stringify(data),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
@@ -76,4 +77,6 @@ serve(async (req) => {
       { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
   }
+
+
 });

@@ -1,9 +1,10 @@
-import { Database, Globe, Menu, X, LogOut } from 'lucide-react';
+import { Database, Globe, Menu, X, LogOut, Settings } from 'lucide-react';
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { SUPPORTED_LANGUAGES, LanguageCode } from '@/lib/constants';
 import { useAuth } from '@/hooks/useAuth';
 import { toast } from 'sonner';
+import { SettingsDialog } from '@/components/settings/SettingsDialog';
 import logo from '@/assets/logo.png';
 
 interface HeaderProps {
@@ -82,7 +83,7 @@ export const Header = ({ selectedLanguage, onLanguageChange }: HeaderProps) => {
                 <Globe className="w-4 h-4" />
                 <span className="hidden sm:inline">{currentLang?.nativeName}</span>
               </Button>
-              
+
               {isLangOpen && (
                 <div className="absolute top-full right-0 mt-2 w-48 glass-strong rounded-xl p-2 shadow-lg animate-scale-in">
                   {SUPPORTED_LANGUAGES.map((lang) => (
@@ -92,11 +93,10 @@ export const Header = ({ selectedLanguage, onLanguageChange }: HeaderProps) => {
                         onLanguageChange(lang.code);
                         setIsLangOpen(false);
                       }}
-                      className={`w-full text-left px-3 py-2 rounded-lg text-sm transition-colors ${
-                        selectedLanguage === lang.code
-                          ? 'bg-primary/20 text-primary'
-                          : 'hover:bg-secondary/50 text-foreground'
-                      }`}
+                      className={`w-full text-left px-3 py-2 rounded-lg text-sm transition-colors ${selectedLanguage === lang.code
+                        ? 'bg-primary/20 text-primary'
+                        : 'hover:bg-secondary/50 text-foreground'
+                        }`}
                     >
                       <span className="font-medium">{lang.nativeName}</span>
                       <span className="text-muted-foreground ml-2 text-xs">{lang.name}</span>
@@ -106,15 +106,17 @@ export const Header = ({ selectedLanguage, onLanguageChange }: HeaderProps) => {
               )}
             </div>
 
+            <SettingsDialog />
+
             <Button variant="glass" size="sm" className="hidden sm:flex gap-2">
               <Database className="w-4 h-4" />
               Ingest Data
             </Button>
 
             {user && (
-              <Button 
-                variant="ghost" 
-                size="sm" 
+              <Button
+                variant="ghost"
+                size="sm"
                 className="hidden sm:flex gap-2 text-muted-foreground hover:text-destructive"
                 onClick={handleSignOut}
               >
@@ -154,8 +156,18 @@ export const Header = ({ selectedLanguage, onLanguageChange }: HeaderProps) => {
               <a href="#sources" className="px-4 py-2 text-sm text-muted-foreground hover:text-foreground hover:bg-secondary/50 rounded-lg transition-colors">
                 Data Sources
               </a>
+
+              <div className="px-4 py-2">
+                <SettingsDialog>
+                  <Button variant="ghost" className="w-full justify-start gap-2 h-auto p-0 font-normal text-sm text-muted-foreground hover:text-foreground">
+                    <Settings className="w-4 h-4" />
+                    Settings
+                  </Button>
+                </SettingsDialog>
+              </div>
+
               {user && (
-                <button 
+                <button
                   onClick={handleSignOut}
                   className="px-4 py-2 text-sm text-destructive hover:bg-destructive/10 rounded-lg transition-colors flex items-center gap-2"
                 >

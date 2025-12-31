@@ -12,6 +12,7 @@ import { toast } from '@/hooks/use-toast';
 import { formatUSD, SECTORS } from '@/lib/constants';
 import { LanguageCode } from '@/lib/constants';
 import { getTranslation } from '@/lib/localization';
+import { useApiKeys } from '@/contexts/ApiKeyContext';
 
 interface StartupProfile {
   name: string;
@@ -70,7 +71,8 @@ const FUNDING_AMOUNTS = [
 
 export const InvestorMatchingPanel = ({ selectedLanguage }: InvestorMatchingPanelProps) => {
   const t = getTranslation(selectedLanguage);
-  
+  const { geminiApiKey } = useApiKeys();
+
   const [startupProfile, setStartupProfile] = useState<StartupProfile>({
     name: '',
     sector: '',
@@ -79,7 +81,7 @@ export const InvestorMatchingPanel = ({ selectedLanguage }: InvestorMatchingPane
     location: '',
     description: '',
   });
-  
+
   const [isLoading, setIsLoading] = useState(false);
   const [matchResult, setMatchResult] = useState<MatchResult | null>(null);
   const [expandedMatch, setExpandedMatch] = useState<string | null>(null);
@@ -89,11 +91,11 @@ export const InvestorMatchingPanel = ({ selectedLanguage }: InvestorMatchingPane
   };
 
   const isFormValid = () => {
-    return startupProfile.name && 
-           startupProfile.sector && 
-           startupProfile.stage && 
-           startupProfile.fundingNeeded && 
-           startupProfile.description;
+    return startupProfile.name &&
+      startupProfile.sector &&
+      startupProfile.stage &&
+      startupProfile.fundingNeeded &&
+      startupProfile.description;
   };
 
   const handleSubmit = async () => {
@@ -112,6 +114,9 @@ export const InvestorMatchingPanel = ({ selectedLanguage }: InvestorMatchingPane
     try {
       const { data, error } = await supabase.functions.invoke('investor-match', {
         body: { startupProfile },
+        headers: {
+          'x-gemini-key': geminiApiKey,
+        },
       });
 
       if (error) throw error;
@@ -152,7 +157,7 @@ export const InvestorMatchingPanel = ({ selectedLanguage }: InvestorMatchingPane
   return (
     <section id="investor-matching" className="py-16 bg-background relative">
       <div className="absolute inset-0 bg-grid-pattern bg-grid opacity-10" />
-      
+
       <div className="container mx-auto px-4 relative z-10">
         <div className="text-center mb-12">
           <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-primary/10 border border-primary/20 mb-4">
@@ -204,8 +209,8 @@ export const InvestorMatchingPanel = ({ selectedLanguage }: InvestorMatchingPane
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <div className="space-y-2">
                   <label className="text-sm font-medium text-foreground">Sector *</label>
-                  <Select 
-                    value={startupProfile.sector} 
+                  <Select
+                    value={startupProfile.sector}
                     onValueChange={(value) => handleInputChange('sector', value)}
                   >
                     <SelectTrigger className="bg-background/50">
@@ -220,8 +225,8 @@ export const InvestorMatchingPanel = ({ selectedLanguage }: InvestorMatchingPane
                 </div>
                 <div className="space-y-2">
                   <label className="text-sm font-medium text-foreground">Funding Stage *</label>
-                  <Select 
-                    value={startupProfile.stage} 
+                  <Select
+                    value={startupProfile.stage}
                     onValueChange={(value) => handleInputChange('stage', value)}
                   >
                     <SelectTrigger className="bg-background/50">
@@ -236,8 +241,8 @@ export const InvestorMatchingPanel = ({ selectedLanguage }: InvestorMatchingPane
                 </div>
                 <div className="space-y-2">
                   <label className="text-sm font-medium text-foreground">Funding Needed *</label>
-                  <Select 
-                    value={startupProfile.fundingNeeded} 
+                  <Select
+                    value={startupProfile.fundingNeeded}
                     onValueChange={(value) => handleInputChange('fundingNeeded', value)}
                   >
                     <SelectTrigger className="bg-background/50">
@@ -262,8 +267,8 @@ export const InvestorMatchingPanel = ({ selectedLanguage }: InvestorMatchingPane
                 />
               </div>
 
-              <Button 
-                onClick={handleSubmit} 
+              <Button
+                onClick={handleSubmit}
                 disabled={isLoading || !isFormValid()}
                 className="w-full md:w-auto"
                 size="lg"
@@ -308,7 +313,7 @@ export const InvestorMatchingPanel = ({ selectedLanguage }: InvestorMatchingPane
               {/* Investor Matches */}
               <div className="grid gap-4">
                 {matchResult.matches.map((match, index) => (
-                  <Card 
+                  <Card
                     key={match.investorName}
                     className="border-border/50 bg-card/50 backdrop-blur hover:border-primary/30 transition-all cursor-pointer"
                     onClick={() => setExpandedMatch(
@@ -327,7 +332,7 @@ export const InvestorMatchingPanel = ({ selectedLanguage }: InvestorMatchingPane
                                 {match.investorDetails?.name || match.investorName}
                               </h3>
                               {match.investorDetails?.website && (
-                                <a 
+                                <a
                                   href={match.investorDetails.website}
                                   target="_blank"
                                   rel="noopener noreferrer"
@@ -346,7 +351,7 @@ export const InvestorMatchingPanel = ({ selectedLanguage }: InvestorMatchingPane
                             </p>
                           </div>
                         </div>
-                        
+
                         <div className="text-right flex-shrink-0">
                           <div className={`text-2xl font-bold ${getScoreColor(match.matchScore)}`}>
                             {match.matchScore}%
@@ -354,15 +359,14 @@ export const InvestorMatchingPanel = ({ selectedLanguage }: InvestorMatchingPane
                           <p className={`text-xs ${getScoreColor(match.matchScore)}`}>
                             {getScoreLabel(match.matchScore)}
                           </p>
-                          <Progress 
-                            value={match.matchScore} 
+                          <Progress
+                            value={match.matchScore}
                             className="w-20 h-1.5 mt-2"
                           />
                         </div>
 
-                        <ChevronRight className={`w-5 h-5 text-muted-foreground transition-transform ${
-                          expandedMatch === match.investorName ? 'rotate-90' : ''
-                        }`} />
+                        <ChevronRight className={`w-5 h-5 text-muted-foreground transition-transform ${expandedMatch === match.investorName ? 'rotate-90' : ''
+                          }`} />
                       </div>
 
                       {/* Expanded Content */}
@@ -376,7 +380,7 @@ export const InvestorMatchingPanel = ({ selectedLanguage }: InvestorMatchingPane
                                   <Target className="w-4 h-4 text-primary" />
                                   Investor Profile
                                 </h4>
-                                
+
                                 <div className="space-y-3">
                                   {match.investorDetails.location && (
                                     <div className="flex items-center gap-2 text-sm text-muted-foreground">
@@ -384,7 +388,7 @@ export const InvestorMatchingPanel = ({ selectedLanguage }: InvestorMatchingPane
                                       {match.investorDetails.location}
                                     </div>
                                   )}
-                                  
+
                                   {match.investorDetails.totalInvestments && (
                                     <div className="flex items-center gap-2 text-sm">
                                       <TrendingUp className="w-4 h-4 text-success" />
@@ -394,14 +398,14 @@ export const InvestorMatchingPanel = ({ selectedLanguage }: InvestorMatchingPane
                                       <span className="text-muted-foreground">total invested</span>
                                     </div>
                                   )}
-                                  
+
                                   {match.investorDetails.portfolioFocus && (
                                     <div>
                                       <p className="text-xs text-muted-foreground mb-2">Focus Areas</p>
                                       <div className="flex flex-wrap gap-1.5">
                                         {match.investorDetails.portfolioFocus.slice(0, 5).map((focus, idx) => (
-                                          <Badge 
-                                            key={idx} 
+                                          <Badge
+                                            key={idx}
                                             variant="secondary"
                                             className="text-xs"
                                           >
@@ -411,7 +415,7 @@ export const InvestorMatchingPanel = ({ selectedLanguage }: InvestorMatchingPane
                                       </div>
                                     </div>
                                   )}
-                                  
+
                                   {match.investorDetails.notableInvestments && (
                                     <div>
                                       <p className="text-xs text-muted-foreground mb-2">Notable Investments</p>

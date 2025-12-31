@@ -27,9 +27,10 @@ type MapOptions = {
 
 export const firecrawlApi = {
   // Scrape a single URL
-  async scrape(url: string, options?: ScrapeOptions): Promise<FirecrawlResponse> {
+  async scrape(url: string, options?: ScrapeOptions, apiKey?: string): Promise<FirecrawlResponse> {
     const { data, error } = await supabase.functions.invoke('firecrawl-scrape', {
       body: { url, options },
+      headers: apiKey ? { 'x-firecrawl-key': apiKey } : undefined,
     });
 
     if (error) {
@@ -39,9 +40,10 @@ export const firecrawlApi = {
   },
 
   // Search the web
-  async search(query: string, options?: SearchOptions): Promise<FirecrawlResponse> {
+  async search(query: string, options?: SearchOptions, apiKey?: string): Promise<FirecrawlResponse> {
     const { data, error } = await supabase.functions.invoke('firecrawl-search', {
       body: { query, options },
+      headers: apiKey ? { 'x-firecrawl-key': apiKey } : undefined,
     });
 
     if (error) {
@@ -51,9 +53,10 @@ export const firecrawlApi = {
   },
 
   // Map a website to discover all URLs
-  async map(url: string, options?: MapOptions): Promise<FirecrawlResponse> {
+  async map(url: string, options?: MapOptions, apiKey?: string): Promise<FirecrawlResponse> {
     const { data, error } = await supabase.functions.invoke('firecrawl-map', {
       body: { url, options },
+      headers: apiKey ? { 'x-firecrawl-key': apiKey } : undefined,
     });
 
     if (error) {

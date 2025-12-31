@@ -33,9 +33,11 @@ serve(async (req) => {
       );
     }
 
-    const PERPLEXITY_API_KEY = Deno.env.get('PERPLEXITY_API_KEY');
+    const headerApiKey = req.headers.get('x-cloud-key');
+    const PERPLEXITY_API_KEY = headerApiKey || Deno.env.get('PERPLEXITY_API_KEY');
+
     if (!PERPLEXITY_API_KEY) {
-      console.error('PERPLEXITY_API_KEY not configured');
+      console.error('PERPLEXITY_API_KEY (Cloud API Key) not configured');
       return new Response(
         JSON.stringify({ error: 'Web search service not configured' }),
         { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
@@ -82,14 +84,14 @@ ${langConfig.prompt}`;
     if (!response.ok) {
       const errorText = await response.text();
       console.error('Perplexity API error:', response.status, errorText);
-      
+
       if (response.status === 429) {
         return new Response(
           JSON.stringify({ error: 'Rate limit exceeded. Please try again in a moment.' }),
           { status: 429, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
         );
       }
-      
+
       return new Response(
         JSON.stringify({ error: 'Failed to perform web search' }),
         { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
@@ -103,7 +105,7 @@ ${langConfig.prompt}`;
     console.log('Web search completed, citations:', citations.length);
 
     return new Response(
-      JSON.stringify({ 
+      JSON.stringify({
         content,
         citations: citations.map((url: string, index: number) => ({
           title: `Source ${index + 1}`,

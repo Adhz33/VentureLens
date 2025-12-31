@@ -31,9 +31,9 @@ async function generateQueryKeywords(query: string, apiKey: string): Promise<str
       body: JSON.stringify({
         model: 'google/gemini-2.5-flash',
         messages: [
-          { 
-            role: 'system', 
-            content: 'Extract the key search terms and concepts from this query. Return only a comma-separated list of 5-10 important keywords/phrases. No explanations.' 
+          {
+            role: 'system',
+            content: 'Extract the key search terms and concepts from this query. Return only a comma-separated list of 5-10 important keywords/phrases. No explanations.'
           },
           { role: 'user', content: query }
         ],
@@ -58,7 +58,7 @@ async function generateQueryKeywords(query: string, apiKey: string): Promise<str
 function calculateSemanticScore(queryKeywords: string[], chunkKeywords: string[], chunkContent: string): number {
   let score = 0;
   const contentLower = chunkContent.toLowerCase();
-  
+
   // Score based on keyword matches in embedding data
   for (const qk of queryKeywords) {
     for (const ck of chunkKeywords) {
@@ -66,45 +66,45 @@ function calculateSemanticScore(queryKeywords: string[], chunkKeywords: string[]
         score += 3; // Strong match in semantic keywords
       }
     }
-    
+
     // Also check direct content matches
     if (contentLower.includes(qk)) {
       score += 1;
     }
   }
-  
+
   return score;
 }
 
 // Hybrid search: combines keyword and semantic matching
 function retrieveRelevantChunks(
-  query: string, 
+  query: string,
   queryKeywords: string[],
-  chunks: any[], 
+  chunks: any[],
   maxChunks = 5
 ): any[] {
   const queryWords = query.toLowerCase().split(/\s+/).filter(w => w.length > 3);
-  
+
   const scored = chunks.map(chunk => {
     const content = (chunk.content_chunk || '').toLowerCase();
     let score = 0;
-    
+
     // Keyword matching (traditional)
     queryWords.forEach(word => {
       if (content.includes(word)) score += 1;
     });
-    
+
     // Semantic matching using embeddings
     const embeddingKeywords = chunk.embedding_data?.keywords || [];
     if (embeddingKeywords.length > 0 && queryKeywords.length > 0) {
       score += calculateSemanticScore(queryKeywords, embeddingKeywords, content);
     }
-    
+
     // Boost for longer, more substantial matches
     if (content.length > 200 && score > 0) {
       score += 0.5;
     }
-    
+
     return { ...chunk, score };
   });
 
@@ -129,9 +129,12 @@ serve(async (req) => {
       );
     }
 
-    const LOVABLE_API_KEY = Deno.env.get('LOVABLE_API_KEY');
-    if (!LOVABLE_API_KEY) {
-      console.error('LOVABLE_API_KEY not configured');
+    const authHeader = req.headers.get('authorization');
+    const headerApiKey = req.headers.get('x-gemini-key');
+    const GEMINI_API_KEY = headerApiKey || Deno.env.get('GEMINI_API_KEY') || Deno.env.get('LOVABLE_API_KEY'); // Fallback
+
+    if (!GEMINI_API_KEY) {
+      console.error('GEMINI_API_KEY not configured');
       return new Response(
         JSON.stringify({ error: 'AI service not configured' }),
         { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
@@ -139,55 +142,46 @@ serve(async (req) => {
     }
 
     const langConfig = SUPPORTED_LANGUAGES[language] || SUPPORTED_LANGUAGES.en;
-    
+
     // Retrieve relevant context from knowledge base
     let contextChunks: any[] = [];
     let documentSources: any[] = [];
-    
+    let contextText = "";
+
     if (useKnowledgeBase) {
       const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
       const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
       const supabase = createClient(supabaseUrl, supabaseKey);
 
       // Generate semantic keywords for the query
-      const queryKeywords = await generateQueryKeywords(query, LOVABLE_API_KEY);
+      // Using Gemini Key if available, or fallback to trying Lovable env var if user hasn't migrated fully
+      const queryKeywords = await generateQueryKeywords(query, GEMINI_API_KEY);
       console.log('Query keywords:', queryKeywords);
 
       // Get all embeddings/chunks with embedding data
-      const { data: embeddings, error: embError } = await supabase
+      const { data: embeddings, error: embeddingsError } = await supabase
         .from('embeddings')
-        .select('content_chunk, metadata, source_id, embedding_data')
-        .limit(500);
+        .select(`
+          content_chunk,
+          embedding_data,
+          metadata
+        `)
+        .limit(50);
 
-      if (!embError && embeddings && embeddings.length > 0) {
-        console.log('Found embeddings:', embeddings.length);
-        contextChunks = retrieveRelevantChunks(query, queryKeywords, embeddings);
-        console.log('Retrieved relevant chunks:', contextChunks.length, 'Top score:', contextChunks[0]?.score);
+      if (embeddingsError) {
+        console.error('Error fetching embeddings:', embeddingsError);
+      }
 
-        // Get document names for sources
-        if (contextChunks.length > 0) {
-          const docIds = contextChunks
-            .map(c => c.metadata?.documentId)
-            .filter(Boolean);
-          
-          if (docIds.length > 0) {
-            const { data: docs } = await supabase
-              .from('knowledge_documents')
-              .select('id, file_name, category')
-              .in('id', docIds);
-            
-            if (docs) {
-              documentSources = docs;
-            }
-          }
-        }
+      const relevantChunks = embeddings?.filter(e => {
+        return e.content_chunk.toLowerCase().includes(query.toLowerCase()) ||
+          queryKeywords.some(k => e.content_chunk.toLowerCase().includes(k.toLowerCase()));
+      }).slice(0, 5) || [];
+
+      if (relevantChunks.length > 0) {
+        contextText = relevantChunks.map(c => `[Source: ${c.metadata?.fileName}]\n${c.content_chunk}`).join('\n\n');
+        documentSources = [...new Set(relevantChunks.map(c => ({ name: c.metadata?.fileName?.split('/').pop(), category: 'document' })))];
       }
     }
-
-    // Build context string from retrieved chunks
-    const contextText = contextChunks.length > 0
-      ? `\n\nRelevant context from uploaded documents:\n${contextChunks.map((c, i) => `[Document ${i + 1}] ${c.content_chunk}`).join('\n\n')}`
-      : '';
 
     const systemPrompt = `You are VentureLens, an expert AI assistant specializing in Indian startup funding intelligence. Your role is to provide accurate, grounded insights about:
 
@@ -216,14 +210,15 @@ ${contextText}`;
 
     console.log('Processing RAG query:', query.substring(0, 100), 'Language:', language, 'Context chunks:', contextChunks.length);
 
-    const response = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
+    // Using Google's OpenAI-compatible endpoint for Gemini
+    const response = await fetch('https://generativelanguage.googleapis.com/v1beta/openai/chat/completions', {
       method: 'POST',
       headers: {
-        'Authorization': `Bearer ${LOVABLE_API_KEY}`,
+        'Authorization': `Bearer ${GEMINI_API_KEY}`,
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        model: 'google/gemini-2.5-flash',
+        model: 'gemini-1.5-flash',
         messages,
         stream: true,
       }),
@@ -232,7 +227,7 @@ ${contextText}`;
     if (!response.ok) {
       const errorText = await response.text();
       console.error('AI Gateway error:', response.status, errorText);
-      
+
       if (response.status === 429) {
         return new Response(
           JSON.stringify({ error: 'Rate limit exceeded. Please try again in a moment.' }),
@@ -245,7 +240,7 @@ ${contextText}`;
           { status: 402, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
         );
       }
-      
+
       return new Response(
         JSON.stringify({ error: 'Failed to generate response' }),
         { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
@@ -254,12 +249,12 @@ ${contextText}`;
 
     // Return streaming response with document sources in headers
     return new Response(response.body, {
-      headers: { 
-        ...corsHeaders, 
+      headers: {
+        ...corsHeaders,
         'Content-Type': 'text/event-stream',
-        'X-Document-Sources': JSON.stringify(documentSources.map(d => ({ 
-          name: d.file_name, 
-          category: d.category 
+        'X-Document-Sources': JSON.stringify(documentSources.map(d => ({
+          name: d.file_name,
+          category: d.category
         })))
       },
     });
