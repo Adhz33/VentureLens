@@ -26,17 +26,17 @@ function chunkText(text: string, chunkSize = 800, overlap = 150): string[] {
   return chunks;
 }
 
-// Generate embeddings using Lovable AI
+// Generate embeddings using Gemini AI
 async function generateEmbedding(text: string, apiKey: string): Promise<string[] | null> {
   try {
-    const response = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
+    const response = await fetch('https://generativelanguage.googleapis.com/v1beta/openai/chat/completions', {
       method: 'POST',
       headers: {
         'Authorization': `Bearer ${apiKey}`,
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        model: 'google/gemini-2.5-flash',
+        model: 'gemini-1.5-flash',
         messages: [
           { 
             role: 'system', 
@@ -308,7 +308,7 @@ serve(async (req) => {
 
     const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
     const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
-    const lovableApiKey = Deno.env.get('LOVABLE_API_KEY');
+    const geminiApiKey = Deno.env.get('GEMINI_API_KEY');
     const supabase = createClient(supabaseUrl, supabaseKey);
 
     // Update document status to processing
@@ -424,8 +424,8 @@ serve(async (req) => {
       const chunk = chunks[index];
       let embeddingData = null;
       
-      if (lovableApiKey && index < 20) {
-        embeddingData = await generateEmbedding(chunk, lovableApiKey);
+      if (geminiApiKey && index < 20) {
+        embeddingData = await generateEmbedding(chunk, geminiApiKey);
       }
       
       embeddingInserts.push({
@@ -462,7 +462,7 @@ serve(async (req) => {
         chunksCreated: chunks.length,
         documentId,
         fileType: fileName.split('.').pop(),
-        hasEmbeddings: !!lovableApiKey
+        hasEmbeddings: !!geminiApiKey
       }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );

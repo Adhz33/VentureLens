@@ -37,7 +37,7 @@ serve(async (req) => {
     console.log('Matching investors for startup:', startupProfile.name, 'Sector:', startupProfile.sector);
 
     const headerApiKey = req.headers.get('x-gemini-key');
-    const GEMINI_API_KEY = headerApiKey || Deno.env.get('GEMINI_API_KEY') || Deno.env.get('LOVABLE_API_KEY');
+    const GEMINI_API_KEY = headerApiKey || Deno.env.get('GEMINI_API_KEY');
 
     if (!GEMINI_API_KEY) {
       throw new Error('AI service (Gemini) is not configured');
