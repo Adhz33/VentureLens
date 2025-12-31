@@ -27,25 +27,32 @@ serve(async (req) => {
 
     console.log('Ingesting data from:', url);
 
-    // Insert the data source
+    // Upsert the data source (update if URL exists, insert otherwise)
     const { data: dataSource, error: sourceError } = await supabase
       .from('data_sources')
-      .insert({
+      .upsert({
         url,
         title: title || url,
         source_type: sourceType,
         content,
         metadata,
-      })
+        updated_at: new Date().toISOString(),
+      }, { onConflict: 'url' })
       .select()
       .single();
 
     if (sourceError) {
-      console.error('Error inserting data source:', sourceError);
+      console.error('Error upserting data source:', sourceError);
       throw sourceError;
     }
 
-    console.log('Data source created:', dataSource.id);
+    console.log('Data source created/updated:', dataSource.id);
+
+    // Delete old embeddings for this source before inserting new ones
+    await supabase
+      .from('embeddings')
+      .delete()
+      .eq('source_id', dataSource.id);
 
     // Chunk the content for embeddings (simple chunking by paragraphs)
     const chunks = chunkContent(content, 1000);
