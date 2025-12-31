@@ -19,17 +19,17 @@ const SUPPORTED_LANGUAGES: Record<string, { name: string; prompt: string }> = {
   pa: { name: 'Punjabi', prompt: 'ਪੰਜਾਬੀ ਵਿੱਚ ਜਵਾਬ ਦਿਓ. Respond in Punjabi.' },
 };
 
-// Generate query keywords using Lovable AI
+// Generate query keywords using Gemini AI
 async function generateQueryKeywords(query: string, apiKey: string): Promise<string[]> {
   try {
-    const response = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
+    const response = await fetch('https://generativelanguage.googleapis.com/v1beta/openai/chat/completions', {
       method: 'POST',
       headers: {
         'Authorization': `Bearer ${apiKey}`,
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        model: 'google/gemini-2.5-flash',
+        model: 'gemini-1.5-flash',
         messages: [
           {
             role: 'system',
@@ -131,7 +131,7 @@ serve(async (req) => {
 
     const authHeader = req.headers.get('authorization');
     const headerApiKey = req.headers.get('x-gemini-key');
-    const GEMINI_API_KEY = headerApiKey || Deno.env.get('GEMINI_API_KEY') || Deno.env.get('LOVABLE_API_KEY'); // Fallback
+    const GEMINI_API_KEY = headerApiKey || Deno.env.get('GEMINI_API_KEY');
 
     if (!GEMINI_API_KEY) {
       console.error('GEMINI_API_KEY not configured');
@@ -154,7 +154,6 @@ serve(async (req) => {
       const supabase = createClient(supabaseUrl, supabaseKey);
 
       // Generate semantic keywords for the query
-      // Using Gemini Key if available, or fallback to trying Lovable env var if user hasn't migrated fully
       const queryKeywords = await generateQueryKeywords(query, GEMINI_API_KEY);
       console.log('Query keywords:', queryKeywords);
 

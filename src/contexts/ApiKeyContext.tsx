@@ -31,11 +31,8 @@ export const ApiKeyProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         const storedCloudKey = localStorage.getItem('cloudApiKey');
         const storedSupabaseUrl = localStorage.getItem('supabaseUrl');
         const storedSupabaseKey = localStorage.getItem('supabaseKey');
-        // Fallback for migration
-        const storedLovableKey = localStorage.getItem('lovableApiKey');
 
         if (storedGeminiKey) setGeminiApiKey(storedGeminiKey);
-        else if (storedLovableKey) setGeminiApiKey(storedLovableKey);
 
         if (storedFirecrawlKey) setFirecrawlApiKey(storedFirecrawlKey);
         if (storedCloudKey) setCloudApiKey(storedCloudKey);
@@ -55,9 +52,6 @@ export const ApiKeyProvider: React.FC<{ children: React.ReactNode }> = ({ childr
 
         localStorage.setItem('supabaseUrl', supabaseUrl);
         localStorage.setItem('supabaseKey', supabaseKey);
-
-        // Clear old key
-        localStorage.removeItem('lovableApiKey');
 
         toast.success('API keys saved successfully');
 
